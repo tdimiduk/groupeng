@@ -70,7 +70,10 @@ def run(input_deck):
             try:
                 if values[0].lower() == 'all':
                     values = flag_values
-                    values.remove(None)
+                    try: 
+                        values.remove(None)
+                    except ValueError:
+                        pass # ignore error if None is not present, we just want to make sure it isn't
             except AttributeError:
                 # Attribute error probably means values[0] is not a string, that is fine, if it isn't it can't be 'all' so just pretend the if failed
                 pass
@@ -92,19 +95,8 @@ def run(input_deck):
 
     
     suceeded = rule.apply_rules_list(rules, groups, students)
-    #results = linear_programming.optimize_groups(students, groups, rules, mean)
-
-#    students_lookup = dict([(s.key, s) for s in students])
-
-#    for g in groups:
-#        s_ids = results[g.number]
-#        g.students = [students_lookup[s] for s in s_ids]
-    
         
     groups = sorted(groups, key=lambda x: x.group_number)
-    
- 
-
     
     # now we are done with phantom students, remove them so they don't show up in the output
     students = [s for s in students if s[primary_key] is not None]

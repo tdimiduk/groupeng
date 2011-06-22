@@ -1,0 +1,86 @@
+# Example input deck file for GroupEng
+ 
+# Lines that start with a # are comments and are ignored by the program
+
+# The file that containes the student list.  This should be a csv file as
+# exported from excel
+# Either store the input deck in the same directory as the class file,
+# or give the full path to the class file here
+classlist : sample_class_1.csv
+
+# Student Identifier (name, id number, something you want to post groups by)
+identifier : ID
+
+# Some measure of student strength, their gpa, grade in a prereq, grade on a test or homework
+strength : GPA
+
+group_size : 4
+
+# If the students don't divide evenly into group_size person groups,
+# do we make fail high (have an extra person in some groups), or low
+# (have one less person in some groups)
+uneven_size : low
+
+rules:
+# Don't isolate women
+  - type : cluster
+    flag : Gender
+    value : F
+
+# Don't isolate minorities
+  - type : cluster
+    flag : Ethinicity
+    # Here we treat all URM students as one type, if you wanted to
+    # make sure each minority group individually was not isolated, you
+    # would use three seperate cluster rules
+    value : [B, H, N]
+
+# Multidisciplinary teams
+  - type : distribute
+    flag : Major
+    value : all
+
+# Ensure Teams have all needed skills
+  - type : distribute
+    flag : Skill1
+    value : y
+  - type : distribute
+    flag : Skill2
+    value : y
+  - type : distribute
+    flag : Skill3
+    value : y
+
+# Put students on the same project choice together
+#  - type : aggregate
+#    flag : Project choice
+#    value : all
+
+# You will usually want to put the balance rule last.  It turn out the
+# program is pretty good at meeting balance rules even with low
+# priority, but locking in groups by gpa balance at high priority
+# makes it hard to meet other rules
+  - type : balance
+    weight : .2
+
+ 
+# What kind of output do we want?  Each item is one kind of report
+output :
+#  prints groups in the form: Group 1, bob, jane, anne, joe
+#                             Group 2, ...
+- type : group_per_line
+  outfile : groups.csv
+    
+#prints groups in the form:
+# Group 1
+# bob
+# jane
+# ...
+# Group 2
+# ...
+- type : group_blocks
+  outfile : groups.txt
+    
+# prints the full input spreadsheet back, adding the group number
+- type : full_report
+  outfile : students_grouped.csv

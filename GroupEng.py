@@ -26,12 +26,12 @@ import os.path
 import os
 
 if len(sys.argv) > 1:
-#    try:
+    try:
         groups, status = controller.run(sys.argv[1])
         if not status:
             print('Could not completely meet all rules')
-#    except Exception as e:
-#        print(e)
+    except Exception as e:
+        print(e)
 
 else:
     path = askopenfilename()

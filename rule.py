@@ -117,9 +117,7 @@ class Cluster(Rule):
 
         targets = filter(target_group, groups)
         if len(targets) == 0:
-            print('warning failed to find swap targets')
             return False
-#            raise NoTargetGroupsFound
         return try_groups(student, targets, target_student)
     
 class Balance(Rule):
@@ -235,7 +233,6 @@ class NumberBased(Rule):
             if down: # find groups we could give a student to
                 targets.extend(filter(lambda g: self.can_accept(g, my_value), groups))
             if not targets:
-                print('Warning failed to find swap targets')
                 return False #raise NoTargets(self)
             return try_groups(student, targets)
         return True
@@ -303,7 +300,6 @@ def apply_rule(rule, groups, students, try_number=0):
         if try_number < 20:
             return apply_rule(rule, groups, students, try_number+1)
         else:
-            print('Failed to satisfy rule: {0}'.format(rule))
             return False
     else:
         return True
