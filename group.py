@@ -20,6 +20,7 @@ import student
 from student import rank, mtile
 import random
 import utility
+from operator import attrgetter
 
 class group(object):
     """
@@ -110,17 +111,16 @@ def swap(s1, s2):
     group2.add(s1)
 
 
-def group_setup(students, group_size, get_strength, strength_flag,
-                name_flag, uneven_size='low'):
+def group_setup(students, group_size, name_flag, uneven_size='low'):
 
+    strength_flag = students[0].strength_flag
+    
     # Need to find out who the weakest student is, but some students
     # may not have a gpa listed, in that case ignore them and keep
     # looking
-    students.sort(key=get_strength)
-    min_strength = get_strength(students[0])
-    i = 1
-    while not min_strength:
-        min_strength = get_strength(students[i])
+    strength = attrgetter('strength')
+    students.sort(key=strength)
+    min_strength = min(students, key=strength)
 
     # fill up to an integer multiple of group_size with phantom students
     # phantom students have None's as values for most fields, this
@@ -131,7 +131,7 @@ def group_setup(students, group_size, get_strength, strength_flag,
     # may be worse than not having no one, but ...)
     keys[strength_flag] = min_strength
     def phantom():
-        return student.student(keys, key=students[0].key_flag, strength=students[0].strength_flag)
+        return student.student(keys, key=students[0].key_flag, strength=strength_flag)
 
     rem = len(students) % group_size
     if rem:
@@ -148,7 +148,7 @@ def group_setup(students, group_size, get_strength, strength_flag,
             for i in range(n_groups*group_size-len(students)):
                 students.append(phantom())
 
-    students.sort(key = get_strength)
+    students.sort(key = strength)
 
     n_groups = len(students)/group_size
 

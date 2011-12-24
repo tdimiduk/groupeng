@@ -62,7 +62,7 @@ class student(object):
                 self.data[key] = numberize(val)
             
         self.group = None
-        self.headers = headers
+        self.headers = list(headers)
         if group_number not in self.headers:
             self.headers.append(group_number)
 
@@ -103,10 +103,24 @@ def flag_differs(flag, value):
     return [s for s in l if cond(s)]
 
 def load(filename, key, strength_flag):
-    headers = csv.reader(file(filename)).next()
-    inf = csv.DictReader(file(filename))
-    # make students from file, ignore any blank lines
-    students = [student(s, headers, key, strength_flag) for s in inf if not set(s.values()).issubset(set(['', ' ', None]))]
+    inf = csv.reader(file(filename))
+
+    # Strip excess spaces from the header names, since this can lead to tricky
+    # bugs later
+    headers = [h.strip() for h in inf.next()]
+    # now make the students from the file
+    students = []
+    for s in inf:
+        if set(s).issubset(set(['', ' ', None])):
+            # skip blank lines
+            pass
+        else:
+            d = {}
+            for i, h  in enumerate(headers):
+                d[h] = s[i]
+            # make a copy of headers so student doesn't change it
+            students.append(student(d, list(headers), key, strength_flag))
+        
     return students
 
         

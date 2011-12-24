@@ -156,7 +156,9 @@ class Balance(Rule):
 
         targets = filter(lambda g: test(g), groups)
 
-        short_list = filter(lambda g: abs(utility.mean(g, self.get_strength)-self.mean) > self.tol, targets)
+        short_list = filter(lambda g: abs(utility.mean(g,
+                                                       self.get_strength) -
+                                          self.mean) > self.tol, targets)  
 
         try:
             if try_groups(student, short_list):
@@ -170,15 +172,21 @@ class Balance(Rule):
 
 class UnevenGroups(Exception):
     def __str__(self):
-        return "Students don't add to number of groups, I haven't added phantoms properly somewhere"
+        return "Students don't add to number of groups, I haven't added \
+phantoms properly somewhere"
 
 class NoTargets(Exception):
     def __init__(self, rule):
         self.rule = rule
     def __str__(self):
-        return "Could not find target groups while searching rule: {0}".format(self.rule)
+        return "Could not find target groups while searching rule: {0}".format(
+            self.rule)
 
 class NumberBased(Rule):
+    """
+    Base class for rules that operate based on number of students with a
+    specific flag.  
+    """
     def __init__(self, weight, flag, values, students, group_size, all_flags):
         self.weight = weight
         self.flag = flag
@@ -189,7 +197,8 @@ class NumberBased(Rule):
         except AttributeError:
             values = [values]
         self.values = values
-        self.numbers = dict([(value, number(students, self.flag, value)) for value in values])
+        self.numbers = dict([(value, number(students, self.flag, value)) for
+                             value in values]) 
         self.values = sorted(self.values, key=lambda x: self.numbers[x])
         self.n_groups = len(students) // group_size
         if self.n_groups * group_size != len(students):
@@ -207,14 +216,17 @@ class NumberBased(Rule):
         return up, down
 
     def can_spare(self, group, flag_val):
-        return (number(group, self.flag, flag_val) - 1) in self._target_numbers(flag_val)
+        return (number(group, self.flag, flag_val) - 1) in self._target_numbers(
+            flag_val)
 
     def can_accept(self, group, flag_val):
-        return (number(group, self.flag, flag_val) + 1) in self._target_numbers(flag_val)
+        return (number(group, self.flag, flag_val) + 1) in self._target_numbers(
+            flag_val)
         
     def _check(self, students):
         for value in self.values:
-            if number(students, self.flag, value) not in self._target_numbers(value):
+            if number(students, self.flag, value) not in self._target_numbers(
+                value):
                 return False
         return True
 
@@ -229,13 +241,18 @@ class NumberBased(Rule):
             up, down = self.valid_directions(n, my_value)
             targets = []
             if up: # find groups we could steal a student from
-                targets.extend(filter(lambda g: self.can_spare(g, my_value), groups))
+                targets.extend(filter(lambda g: self.can_spare(g, my_value),
+                                      groups)) 
             if down: # find groups we could give a student to
-                targets.extend(filter(lambda g: self.can_accept(g, my_value), groups))
+                targets.extend(filter(lambda g: self.can_accept(g, my_value),
+                                      groups)) 
             if not targets:
                 return False #raise NoTargets(self)
             return try_groups(student, targets)
         return True
+
+    def _target_numbers(self, value):
+        raise NotImplemented()
         
 class Distribute(NumberBased):
     def __str__(self):

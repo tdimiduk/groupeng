@@ -26,13 +26,15 @@ class RuleNotImplemented(Exception):
     def __init__(self, r):
         self.rule = r
     def __str__(self):
-        return "Sorry, we don't have a rule named: {0}\ndo you have a typo in your input deck?".format(self.rule)
+        return "Sorry, we don't have a rule named: {0}\ndo you have a typo in \
+your input deck?".format(self.rule)
 
 class InputDeckError(Exception):
     def __init__(self, e):
         self.e = e
     def __str__(self):
-        return "You have a typo in your input deck.  Here is the error I got, see if it helps:\n{0}".format(self.e)
+        return "You have a typo in your input deck.  Here is the error I got, \
+see if it helps:\n{0}".format(self.e)
     
 def run(input_deck):
     try:
@@ -47,15 +49,16 @@ def run(input_deck):
     except (TypeError, yaml.parser.ParserError) as e:
         raise InputDeckError(e)
 
-    groups, students, group_size = group.group_setup(students, group_size, get_strength, strength_flag,
-                                                     primary_key, dek.get('uneven_size'))
-
+    groups, students, group_size = group.group_setup(students, group_size,
+                                                     primary_key,
+                                                     dek.get('uneven_size'))
 
     mean = utility.mean(students, get_strength)
     std = utility.std(students, get_strength)
 
     rules = []
-    rules.append(rule.Distribute(100, primary_key, None, students, group_size, None))
+    rules.append(rule.Distribute(100, primary_key, None, students, group_size,
+                                 None))
     for r in dek['rules']:
         flag = r.get('flag')
         if flag:
@@ -69,26 +72,34 @@ def run(input_deck):
                 values = [values]
             try:
                 if values[0].lower() == 'all':
+                    print(flag_values)
                     values = flag_values
                     try: 
                         values.remove(None)
                     except ValueError:
-                        pass # ignore error if None is not present, we just want to make sure it isn't
+                        pass # ignore error if None is not present, we just want
+                             # to make sure it isn't
             except AttributeError:
-                # Attribute error probably means values[0] is not a string, that is fine, if it isn't it can't be 'all' so just pretend the if failed
+                # Attribute error probably means values[0] is not a string, that
+                # is fine, if it isn't it can't be 'all' so just pretend the if
+                # failed
                 pass
 
             # TODO add capability to collapse similar flags
+
                 
         if r['type'].lower() == 'cluster':
             rules.append(rule.Cluster(weight, flag, values))
         elif r['type'].lower() == 'distribute':
-            rules.append(rule.Distribute(weight, flag, values, students, group_size, flag_values))
+            rules.append(rule.Distribute(weight, flag, values, students,
+                                         group_size, flag_values))
         elif r['type'].lower() == 'aggregate':
-            rules.append(rule.Aggregate(weight, flag, values, students, group_size, flag_values))
+            rules.append(rule.Aggregate(weight, flag, values, students,
+                                        group_size, flag_values))
         elif r['type'].lower() == 'balance':
             
-            rules.append(rule.Balance(weight, strength_flag, mean, std, r.get('tol')))
+            rules.append(rule.Balance(weight, strength_flag, mean, std,
+                                      r.get('tol')))
         else:
             raise RuleNotImplemented(r['type'])
 
@@ -98,7 +109,8 @@ def run(input_deck):
         
     groups = sorted(groups, key=lambda x: x.group_number)
     
-    # now we are done with phantom students, remove them so they don't show up in the output
+    # now we are done with phantom students, remove them so they don't show up
+    # in the output
     students = [s for s in students if s[primary_key] is not None]
         
     for o in dek['output']:
@@ -127,12 +139,17 @@ def run(input_deck):
         n_fail = reduce(lambda x, y: x+(1-r.check(y)), groups, 0)
         report.write('{0} groups failed rule : {1}\n\n'.format(n_fail, r))
 
-    report.write('{0} Statistics\n------------------------\n'.format(strength_flag))
-    report.write('Class Mean: {0:3.2f}\n'.format(utility.mean(students, get_strength)))
-    report.write('Class Std Dev: {0:3.2f}\n'.format(utility.std(students, get_strength)))
+    report.write('{0} Statistics\n------------------------\n'.format(
+            strength_flag))
+    report.write('Class Mean: {0:3.2f}\n'.format(utility.mean(students,
+                                                              get_strength))) 
+    report.write('Class Std Dev: {0:3.2f}\n'.format(utility.std(students,
+                                                                get_strength))) 
     group_means = sorted([utility.mean(g, get_strength) for g in groups])
-    report.write('Std Dev of Group Means: {0:3.2f}\n'.format(utility.std(group_means)))
-    report.write('Group Means: {0}\n'.format(', '.join(['{0:3.2f}'.format(m) for m in group_means])))
+    report.write('Std Dev of Group Means: {0:3.2f}\n'.format(
+            utility.std(group_means)))
+    report.write('Group Means: {0}\n'.format(', '.join(['{0:3.2f}'.format(m) for
+                                                        m in group_means]))) 
     
     report.write('Rule Failures By Group\n----------\n')
         
@@ -150,9 +167,11 @@ def run(input_deck):
 def group_output(groups, outf, name, sep = ', '):
     groups.sort(key = lambda x: x.group_number)
     for g in groups:
-        students = sorted(filter(lambda s: s.data.get(name), g.students), key = lambda x: x[name])
+        students = sorted(filter(lambda s: s.data.get(name), g.students), key =
+                          lambda x: x[name]) 
         outf.write('Group {0}{1}{2}\n'.format(g.group_number, sep,
-                                             sep.join([str(s[name]) for s in students])))
+                                             sep.join([str(s[name]) for s in
+                                                       students]))) 
 
 def student_full_output(students, name, outf):
     students = filter(lambda x: x[name] != 'Empty', students)
