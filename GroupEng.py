@@ -19,9 +19,6 @@
 
 import controller
 import sys
-from Tkinter import *
-from tkFileDialog import askopenfilename
-from tkMessageBox import showerror
 import os.path
 import os
 
@@ -34,6 +31,11 @@ if len(sys.argv) > 1:
         print(e)
 
 else:
+    # import gui stuff only if we are going to use it
+    from Tkinter import *
+    from tkFileDialog import askopenfilename
+    from tkMessageBox import showerror
+
     path = askopenfilename()
     d, f = os.path.split(path)
     os.chdir(d)

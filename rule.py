@@ -72,6 +72,11 @@ class Rule(object):
         # will instead look to see if we are making progress towards
         # meeting the rule
         return self.check(new)
+
+    @property
+    def name(self):
+        return self.__class__.__name__
+    
 class Cluster(Rule):
     """
     """
@@ -87,7 +92,6 @@ class Cluster(Rule):
         :type values: 
         
         """
-        self.name = 'Cluster'
         self.weight = weight
         self.flag = flag
         self.values = values
@@ -118,11 +122,10 @@ class Cluster(Rule):
         targets = filter(target_group, groups)
         if len(targets) == 0:
             return False
-        return try_groups(student, targets, target_student)
+        return find_target_and_swap(student, targets, target_student)
     
 class Balance(Rule):
     def __init__(self, weight, flag, mean, std, tol = None):
-        self.name = 'Balance'
         self.weight = weight
         self.flag = flag
         self.mean = mean
@@ -161,11 +164,11 @@ class Balance(Rule):
                                           self.mean) > self.tol, targets)  
 
         try:
-            if try_groups(student, short_list):
+            if find_target_and_swap(student, short_list):
                 return True
-            elif try_groups(student, targets):
+            elif find_target_and_swap(student, targets):
                 return True
-            elif try_groups(student, groups):
+            elif find_target_and_swap(student, groups):
                 return True
         except SwapButNotFix:
             return False
@@ -187,19 +190,19 @@ class NumberBased(Rule):
     Base class for rules that operate based on number of students with a
     specific flag.  
     """
-    def __init__(self, weight, flag, values, students, group_size, all_flags):
+    def __init__(self, weight, flag, flag_values, students, group_size, all_flags):
         self.weight = weight
         self.flag = flag
         self.group_size = group_size
         self.all_flags = all_flags
         try:
-            values.__iter__()
+            flag_values.__iter__()
         except AttributeError:
-            values = [values]
-        self.values = values
+            flag_values = [flag_values]
+        self.flag_values = flag_values
         self.numbers = dict([(value, number(students, self.flag, value)) for
-                             value in values]) 
-        self.values = sorted(self.values, key=lambda x: self.numbers[x])
+                             value in flag_values]) 
+        self.flag_values = sorted(self.flag_values, key=lambda x: self.numbers[x])
         self.n_groups = len(students) // group_size
         if self.n_groups * group_size != len(students):
             raise UnevenGroups
@@ -224,7 +227,7 @@ class NumberBased(Rule):
             flag_val)
         
     def _check(self, students):
-        for value in self.values:
+        for value in self.flag_values:
             if number(students, self.flag, value) not in self._target_numbers(
                 value):
                 return False
@@ -240,15 +243,17 @@ class NumberBased(Rule):
                 return True
             up, down = self.valid_directions(n, my_value)
             targets = []
-            if up: # find groups we could steal a student from
-                targets.extend(filter(lambda g: self.can_spare(g, my_value),
-                                      groups)) 
+            # if we want less of the type this student is, look for groups to
+            # send them to.  
             if down: # find groups we could give a student to
                 targets.extend(filter(lambda g: self.can_accept(g, my_value),
-                                      groups)) 
+                                      groups))
+            # if we want more of this student, don't try to swap them, one of
+            # the other iterations of rule.remedy will try to bring one in.  
             if not targets:
+                import pdb; pdb.set_trace()
                 return False #raise NoTargets(self)
-            return try_groups(student, targets)
+            return find_target_and_swap(student, targets)
         return True
 
     def _target_numbers(self, value):
@@ -256,7 +261,7 @@ class NumberBased(Rule):
         
 class Distribute(NumberBased):
     def __str__(self):
-        return "<Distribute : {0} {1}>".format(self.flag, self.values)
+        return "<Distribute : {0} {1}>".format(self.flag, self.flag_values)
 
     def _target_numbers(self, value):
         n = self.numbers[value]
@@ -266,49 +271,126 @@ class Distribute(NumberBased):
             low = n // self.n_groups
             return (low, low+1)
 
-    @property
-    def name(self):
-        return 'Distribute'
+class counter(dict):
+    def tally(self, key):
+        if self.get(key):
+            self[key] += 1
+        else:
+            self[key] = 1
 
+    def largest(self):
+        """
+        Returns the item with the largest count.
 
+        Notes
+        -----
+        If multiple items have an equal count it will return one of them, which
+        one is not defined
+        """
+        n = 0
+        max_key = None
+        for key, number in self.iteritems():
+            if number > n:
+                n = number
+                max_key = key
+        return max_key
+        
 class Aggregate(NumberBased):
     def __str__(self):
-        return 'Aggregate {0}={1}'.format(self.flag, self.values)
+        return 'Aggregate {0}={1}'.format(self.flag, self.flag_values)
+
+    def valid_directions(self, n, flag_val):
+        halfway = self._target_numbers(flag_val)[1]/2.0
+        return n >= halfway, n <= halfway
+
+    def _check(self, students):
+        count = counter()
+        for student in students:
+            count.tally(student[self.flag])
+
+        phantoms = count.pop(None, 0)
+        
+        for key, number in count.iteritems():
+            if (number in self._target_numbers(key) or
+                  number + phantoms in self._target_numbers(key)):
+                pass
+            else:
+                if len(count.keys()) < 2:
+                    import pdb; pdb.set_trace()
+                return False
+        return True
+
+    def _is(self, value):
+        def match(s):
+            return s[self.flag] == value or s[self.flag] == None
+        return match
+    def _is_not(self, value):
+        return lambda s: s[self.flag] != value
+    
+    def remedy(self, group, groups, students):
+        if group.happy:
+            return True
+        
+        count = counter()
+        for student in group.students:
+            count.tally(student[self.flag])
+
+        # Remove None, phantoms shouldn't affect aggregation
+        if None in count:
+            del count[None]
+
+        # Try to fill the group with students having the value it has the most
+        # of currently
+        largest = count.largest()
+        send_away = filter(self._is_not(largest), students)
+        targets = filter(lambda g: self.can_spare(g, largest), groups)
+        for student in send_away:
+            find_target_and_swap(student, targets, self._is(largest))
+        return group.happy
+        
 
     def _target_numbers(self, value):
-        n = self.numbers[value]
-        if n < self.group_size:
-            return [0, n]
-        elif n % self.group_size == 0:
-            return [0, self.group_size]
+        target = self.numbers[value]
+        if target < self.group_size:
+            return [0, target]
+#        elif n % self.group_size == 0:
+#            return [0, self.group_size]
+#        else:
+#            return [0, n % self.group_size, self.group_size]
         else:
-            return [0, n % self.group_size, self.group_size]
+            return [0, self.group_size]
 
-    @property
-    def name(self):
-        return 'Aggregate'
+                          
         
 class SwapButNotFix:
     def __init__(self, s1, s2):
         self.s1 = s1
         self.s2 = s2
 
-def try_groups(student, targets, target_student=lambda s: True):
+def find_target_and_swap(student, targets, target_student=lambda s: True):
+    target = find_swap_target(student, targets, target_student)
+    if target:
+        swap(student, target)
+        return True
+    else:
+        return False
+
+def find_swap_target(student, targets, target_student=lambda s: True):
     random.shuffle(targets)
     for group in targets:
         random.shuffle(group.students)
         for other in group.students:
             if target_student(other) and valid_swap(student, other):
-                swap(student, other)
-                if not (student.group.happy and other.group.happy):
-                    raise SwapButNotFix(student, other)
-                return 
+                return other
 
     return False
+
 
 def apply_rule(rule, groups, students, try_number=0):
     random.shuffle(groups)
     for group in groups:
+        # add rule checks and will not add the rule twice, so we can just do
+        # this
         group.add_rule(rule)
         if not group.happy:
             rule.remedy(group, groups, students)

@@ -72,7 +72,6 @@ def run(input_deck):
                 values = [values]
             try:
                 if values[0].lower() == 'all':
-                    print(flag_values)
                     values = flag_values
                     try: 
                         values.remove(None)

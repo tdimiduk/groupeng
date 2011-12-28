@@ -43,7 +43,12 @@ class group(object):
 
     def __str__(self):
         return "<Group {0}: Students {1}>".format(self.group_number,
-                                                    [str(s) for s in self.students])
+                                                    [str(s) for s in
+        self.students])
+
+    def __repr__(self):
+        return "group(students={0}, group_number={1})".format(
+            [repr(s) for s in self.students], self.group_number)
 
     def ranksum(self):
         return reduce(lambda x, y: x+y[rank], self.students, 0)
@@ -82,10 +87,12 @@ class group(object):
 def valid_swap(s1, s2):
     if s1 == s2:
         return False
+    if s1.group == s2.group:
+        return False
     l1 = set(s1.group.students)
+    l2 = set(s2.group.students)
     l1.remove(s1)
     l1.add(s2)
-    l2 = set(s2.group.students)
     l2.remove(s2)
     l2.add(s1)
     def rules_permit(rules, old, new):
@@ -120,7 +127,7 @@ def group_setup(students, group_size, name_flag, uneven_size='low'):
     # looking
     strength = attrgetter('strength')
     students.sort(key=strength)
-    min_strength = min(students, key=strength)
+    min_strength = strength(min(students, key=strength))
 
     # fill up to an integer multiple of group_size with phantom students
     # phantom students have None's as values for most fields, this

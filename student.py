@@ -85,6 +85,10 @@ class student(object):
         
     def __str__(self):
         return "<Student : {0}>".format(self.data)
+
+    def __repr__(self):
+        return "student(data={0}, headers={1}, key={2}, strength={3})".format(
+            self.data, self.headers, self.key, self.strength)
         
     def full_record(self):
         return ', '.join([str(self[h]) for h in self.headers])
