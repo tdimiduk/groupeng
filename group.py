@@ -15,6 +15,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Student Groups.  Swapping students between groups, seting up initial random
+groups.  
+
+.. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
+"""
+
 import yaml
 import student
 from student import rank, mtile

@@ -17,6 +17,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+External GroupEng Application.  Handles user invocation and marshalls things for
+use by the rest of GroupEng
+
+.. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
+"""
+
 import controller
 import sys
 import os.path
@@ -29,7 +36,6 @@ if len(sys.argv) > 1:
             print('Could not completely meet all rules')
     except Exception as e:
         print(e)
-
 else:
     # import gui stuff only if we are going to use it
     from Tkinter import *

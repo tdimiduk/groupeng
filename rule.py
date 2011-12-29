@@ -15,16 +15,40 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Grouping rules.  Definitions and functions for fixing groups.  
+
+.. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
+"""
+
 from student import flag_match, flag_differs
 from group import valid_swap, swap
 import random
 import utility
 from group import group
 
-inner_tries = 10
-outer_tries = 1000
+tries = 20
+
+
 
 def number(students, flag, value):
+    """
+    Count the number of students with a give flag value
+
+    Parameters
+    ----------
+    students: list<student>, or group
+        List or group of students to count
+    flag: string
+        Student attribute to count
+    value: string
+        value the flag should have
+        
+    Returns
+    -------
+    number: int
+        Number of students with the given flag falue
+    """
     # Handle input of a group instead of a list of students
     if isinstance(students, group):
         students = students.students

@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Student record.  Creating student record from a csv (excel) file.  
+
+.. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
+"""
+
 import csv
 
 rank = 'rank'
