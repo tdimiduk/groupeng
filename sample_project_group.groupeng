@@ -46,5 +46,5 @@ rules:
 # program is pretty good at meeting balance rules even with low
 # priority, but locking in groups by gpa balance at high priority
 # makes it hard to meet other rules
-#  - balance : GPA
-#    tol : .2
+  - balance : GPA
+    tol : .5

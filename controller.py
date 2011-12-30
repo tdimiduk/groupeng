@@ -79,8 +79,8 @@ def run(input_deck):
         return reduce(lambda x, y: x+(1-r.check(y)), groups, 0)
 
     if failures(rules[0]) !=  0:
-        raise UnevenGroups
-    
+        raise UnevenGroups()
+
     ############################################################################
     # Output
     ############################################################################
@@ -108,7 +108,7 @@ def run(input_deck):
     
     report.write('Made {0} groups\n\n'.format(len(groups)))
     
-    for r in rules:
+    for r in rules[1:]:
         n_fail = failures(r)
         if isinstance(r, Balance):
             group_means = sorted([mean(g, r.get_strength) for g in groups])

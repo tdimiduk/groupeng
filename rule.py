@@ -111,6 +111,7 @@ class Rule(object):
         try:
             values.__iter__()
         except AttributeError:
+            # make sure values is always a list
             values = [values]
         self.values = values
         for i, value in enumerate(self.values):
@@ -175,7 +176,7 @@ class Rule(object):
         # default to checking if the new Group works, some subclasses
         # will instead look to see if we are making progress towards
         # meeting the rule
-        return self.check(new)
+        return self.check(new) or not self.check(old)
 
     def __str__(self):
         return "<{0} {1} {2}>".format(self.name, self.attribute, self.values)
@@ -188,7 +189,10 @@ class Cluster(Rule):
         pass
 
     def _check(self, students):
-        return number(students, self.attribute, self.values) != 1
+        ok = True
+        for value in self.values:
+            ok = ok and number(students, self.attribute, value) != 1
+        return ok
 
     def _fix(self, student, groups, students):
         if student[self.attribute] in self.values:
