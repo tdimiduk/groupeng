@@ -41,9 +41,11 @@ class Course(object):
 
         remainder = len(students) % self.group_size
         if remainder:
-            if uneven_size == '+':
+            if self.uneven_size == '+':
                 # add 1 to group size so most groups can have a phantom
                 self.group_size += 1
+        else:
+            self.group_size = '='
                 
         if self.n_groups * self.group_size < len(students):
             self.n_groups += 1

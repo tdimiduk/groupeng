@@ -153,23 +153,22 @@ def make_initial_groups(course, balance_rules):
     identifier = course.students[0].identifier
     data[identifier] = 'phantom'
     def phantom():
-        return student.Student(data, identifier=identifier)
+        return student.Student(data, identifier=identifier, headers =
+                               course.students[0].headers)
 
-    rem = len(course.students) % course.group_size
-    if rem:
-        if course.uneven_size == '-':
-            n_phantoms = course.group_size - rem
-        else: # fail high (make some groups with an extra person)
-            n_phantoms = (course.n_groups * course.group_size -
-                          len(course.students))
-    else:
+    if course.uneven_size == '-':
+        n_phantoms = course.group_size - len(course.students) % course.group_size
+    elif course.uneven_size == '+': # fail high (make some groups with an extra person)
+        n_phantoms = (course.n_groups * course.group_size -
+                      len(course.students))
+    elif course.uneven_size == '=':
         n_phantoms = 0
 
     course.students = course.students + [phantom() for i in
                                                  range(n_phantoms)]
 
     if len(course.students) != course.group_size * course.n_groups:
-        raise InternalError("Phantom adding didn't give correct Group balance")
+        raise InternalError("Students + Phantoms not divisible by groups")
     
     course.students.sort(key = strengths)
 

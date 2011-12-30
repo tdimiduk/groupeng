@@ -1,23 +1,27 @@
 # Example input deck file for GroupEng
  
-# Lines that start with a # are comments and are ignored by the program
+# Lines that start with a # are comments and GroupEng ignores them
 
-# The file that containes the student list.  This should be a csv file as
-# exported from excel
-# Either store the input deck in the same directory as the class file,
-# or give the full path to the class file here
+# The file that containes the student list.  This should be a csv
+# file as exported from excel
+# Either store the input deck in the same directory as the class
+# file,  or give the full path to the class file here
 classlist : sample_class_1.csv
 
-# Student Identifier (name, id number, something you want to post groups by)
+# Student Identifier (name, id number, ...) should be unique
 student_identifier : ID
 
-group_size : 4-
+# group_size: number of students per group immediately followed by + or -
 # If the students don't divide evenly into group_size person groups,
-# so group size can be + (have an extra person in some groups), or 
+# group size can be + (have an extra person in some groups), or 
 # - (have one less person in some groups)
 
+group_size : 4-
+
 rules:
+# Put students on the same project choice together
   - aggregate : Project choice
+
 # Don't isolate women
   - cluster : Gender
     values : F
@@ -25,8 +29,6 @@ rules:
 # Don't isolate minorities
   - cluster : Ethnicity
     values : (B, H, N)
-
-# Put students on the same project choice together
 
 # Multidisciplinary teams
   - distribute : Major
@@ -47,4 +49,5 @@ rules:
 # priority, but locking in groups by gpa balance at high priority
 # makes it hard to meet other rules
   - balance : GPA
+# how close group mean must be to class mean (* class Std dev)
     tol : .5
