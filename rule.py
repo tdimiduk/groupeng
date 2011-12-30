@@ -195,26 +195,31 @@ class Cluster(Rule):
         return ok
 
     def _fix(self, student, groups, students):
-        if student[self.attribute] in self.values:
-            # we have found the lone student, put them somewhere they will be happy
-            def target_group(g):
-                n = number(g, self.attribute, self.values)
-                return n > 0 and n < len(g.students)
-            def target_student(s):
-                return s[self.attribute] not in self.values
-        else:
-            # we are not at the lone student, look to swap this for a
-            # student with attribute==values
-            def target_group(g):
-                n = number(g, self.attribute, self.values)
-                return n == 1 or n > 2
-            def target_student(s):
-                return s[self.attribute] in self.values
+        success = True
+        for value in self.values:
+            if student[self.attribute] in self.values:
+                # we have found the lone student, put them somewhere they will be happy
+                def target_group(g):
+                    n = number(g, self.attribute, value)
+                    return n > 0 and n < len(g.students)
+                def target_student(s):
+                    return s[self.attribute] and s[self.attribute] not in value
+            else:
+                # we are not at the lone student, look to swap this for a
+                # student with attribute==values
+                def target_group(g):
+                    n = number(g, self.attribute, value)
+                    return n == 1 or n > 2
+                def target_student(s):
+                    return s[self.attribute] and s[self.attribute] in value
 
-        targets = filter(target_group, groups)
-        if len(targets) == 0:
-            return False
-        return find_target_and_swap(student, targets, target_student)
+            targets = filter(target_group, groups)
+            if len(targets) == 0:
+                return False
+            success = (find_target_and_swap(student, targets, target_student)
+                       and success)
+
+        return success
     
 class Balance(Rule):
     name = 'Balance'
