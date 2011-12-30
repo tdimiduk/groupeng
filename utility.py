@@ -19,13 +19,13 @@ import math
 import group
 
 def mean(l, key = lambda x: x):
-    if isinstance(l, group.group):
+    if isinstance(l, group.Group):
         l = l.students
     l = [x for x in l if not hasattr(x,'key') or x.key is not None]
     return reduce(lambda x, y: x+key(y), l, 0.0)/len(l)
 
 def std(l, key = lambda x: x):
-    if isinstance(l, group.group):
+    if isinstance(l, group.Group):
         l = l.students
     l = [x for x in l if not hasattr(x,'key') or x.key is not None]
     v = [key(x) for x in l]

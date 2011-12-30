@@ -16,15 +16,13 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Student record.  Creating student record from a csv (excel) file.  
+Student record.  Creating Student record from a csv (excel) file.  
 
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
 
 import csv
 
-rank = 'rank'
-mtile = 'mitile'
 group_number = 'Group Number'
 
 def numberize(n):
@@ -46,20 +44,23 @@ def numberize(n):
         return n
 
 
-class student(object):
+class Student(object):
     """
     """
     
-    def __init__(self, data = {}, headers = [], key=None, strength=None):
+    def __init__(self, data = {}, headers = [], identifier=None):
         """
         
         Arguments:
-        :param flags: 
-        :type flags: 
+        :param attributes: 
+        :type attributes: 
         
         """
-        self.key_flag = key
-        self.strength_flag = strength
+        self.identifier = identifier
+        if identifier == None:
+            # if they don't give us an identifier, just use the first column
+            self.identifier = headers[0]
+            
         self.data = data
         for key, val in self.data.items():
             if val in ['', '0']:
@@ -80,39 +81,27 @@ class student(object):
     def __setitem__(self, x, val):
         self.data[x] = val
 
-    @property
-    def key(self):
-        return self.data[self.key_flag]
-        
-    @property
-    def strength(self):
-        return self.data[self.strength_flag]
-    
-        
     def __str__(self):
         return "<Student : {0}>".format(self.data)
 
     def __repr__(self):
-        return "student(data={0}, headers={1}, key={2}, strength={3})".format(
-            self.data, self.headers, self.key, self.strength)
+        return "Student(data={0}, headers={1}, identifier={2})".format(
+            self.data, self.headers, self.identifier)
         
     def full_record(self):
         return ', '.join([str(self[h]) for h in self.headers])
     
-def flag_match(flag, value):
+def attribute_match(attribute, value):
     try:
         value.__iter__()
-        return lambda x: x[flag] in value
+        return lambda x: x[attribute] in value
     except AttributeError:
-        return lambda x: x[flag] == value
+        return lambda x: x[attribute] == value
+def attribute_differs(attribute, value):
+    return lambda x: x[attribute] != value
 
-    
 
-def flag_differs(flag, value):
-    return lambda x: x[flag] != value
-    return [s for s in l if cond(s)]
-
-def load(filename, key, strength_flag):
+def load_classlist(filename, identifier):
     inf = csv.reader(file(filename))
 
     # Strip excess spaces from the header names, since this can lead to tricky
@@ -127,9 +116,9 @@ def load(filename, key, strength_flag):
         else:
             d = {}
             for i, h  in enumerate(headers):
-                d[h] = s[i]
-            # make a copy of headers so student doesn't change it
-            students.append(student(d, list(headers), key, strength_flag))
+                d[h] = s[i].strip()
+            # make a copy of headers so Student doesn't change it
+            students.append(Student(d, list(headers), identifier))
         
     return students
 

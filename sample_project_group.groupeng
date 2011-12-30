@@ -1,0 +1,50 @@
+# Example input deck file for GroupEng
+ 
+# Lines that start with a # are comments and are ignored by the program
+
+# The file that containes the student list.  This should be a csv file as
+# exported from excel
+# Either store the input deck in the same directory as the class file,
+# or give the full path to the class file here
+classlist : sample_class_1.csv
+
+# Student Identifier (name, id number, something you want to post groups by)
+student_identifier : ID
+
+group_size : 4-
+# If the students don't divide evenly into group_size person groups,
+# so group size can be + (have an extra person in some groups), or 
+# - (have one less person in some groups)
+
+rules:
+  - aggregate : Project choice
+# Don't isolate women
+  - cluster : Gender
+    values : F
+
+# Don't isolate minorities
+  - cluster : Ethnicity
+    values : (B, H, N)
+
+# Put students on the same project choice together
+
+# Multidisciplinary teams
+  - distribute : Major
+    # default is all majors
+
+# Ensure Teams have all needed skills
+  - distribute : Skill1
+    value : y
+  - distribute : Skill2
+    value : y
+  - distribute : Skill3
+    value : y
+
+
+
+# You will usually want to put the balance rule last.  It turn out the
+# program is pretty good at meeting balance rules even with low
+# priority, but locking in groups by gpa balance at high priority
+# makes it hard to meet other rules
+#  - balance : GPA
+#    tol : .2

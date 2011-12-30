@@ -22,15 +22,15 @@ groups.
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
 
-import yaml
 import student
-from student import rank, mtile
 import random
-import utility
-from operator import attrgetter
 
-class group(object):
+class Group(object):
     """
+    Group of students
+
+    Stores a list of students and the rules that the grouping is supposed to
+    obey.  
     """
     
     def __init__(self, students, group_number):
@@ -52,13 +52,9 @@ class group(object):
         return "<Group {0}: Students {1}>".format(self.group_number,
                                                     [str(s) for s in
         self.students])
-
     def __repr__(self):
-        return "group(students={0}, group_number={1})".format(
+        return "Group(students={0}, group_number={1})".format(
             [repr(s) for s in self.students], self.group_number)
-
-    def ranksum(self):
-        return reduce(lambda x, y: x+y[rank], self.students, 0)
 
     # TODO: OPTIMIZATION: make this stored and update when swapping students
     @property
@@ -111,7 +107,17 @@ def valid_swap(s1, s2):
     return (rules_permit(s1.group.rules, s1.group.students, l1) and
             rules_permit(s2.group.rules, s2.group.students, l2))
 
+class AttemptToRemoveStudentNotInGroup(Exception):
+    pass
 
+class AttemptToSwapStudentWithSelf(Exception):
+    pass
+
+class InternalError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return "An internal error occured: {0}".format(self.msg)
 
 
 def swap(s1, s2):
@@ -125,56 +131,51 @@ def swap(s1, s2):
     group2.add(s1)
 
 
-def group_setup(students, group_size, name_flag, uneven_size='low'):
+def make_initial_groups(course, balance_rules):
 
-    strength_flag = students[0].strength_flag
+    def strengths(s):
+        return [r.get_strength(s) for r in balance_rules]
     
     # Need to find out who the weakest student is, but some students
     # may not have a gpa listed, in that case ignore them and keep
     # looking
-    strength = attrgetter('strength')
-    students.sort(key=strength)
-    min_strength = strength(min(students, key=strength))
+    min_strengths = strengths(min(course.students, key=strengths))
 
     # fill up to an integer multiple of group_size with phantom students
     # phantom students have None's as values for most fields, this
-    # should mean they never get treated as meeting any flag
+    # should mean they never get treated as meeting any attribute
     # requirement
-    keys = dict([(key, None) for key in students[0].data.keys()])
+    data = dict([(key, None) for key in course.students[0].data.keys()])
     # Treat phantoms as as weak as the weakest student (some students
     # may be worse than not having no one, but ...)
-    keys[strength_flag] = min_strength
+    for i, rule in enumerate(balance_rules):
+        data[rule.attribute] = min_strengths[i]
+    identifier = course.students[0].identifier
+    data[identifier] = 'phantom'
     def phantom():
-        return student.student(keys, key=students[0].key_flag, strength=strength_flag)
+        return student.Student(data, identifier=identifier)
 
-    rem = len(students) % group_size
+    rem = len(course.students) % course.group_size
     if rem:
-        if uneven_size.lower() == 'low':
-            # Fail low (make smaller groups if it doesn't fit exactly)
-            for i in range(group_size - rem):
-                students.append(phantom())
+        if course.uneven_size == '-':
+            n_phantoms = course.group_size - rem
         else: # fail high (make some groups with an extra person)
-            # make as many groups as we we can fill
-            n_groups = len(students) // group_size
-            # now we make the code think groups are one bigger
-            group_size += 1
-            # make phantoms to fill the extra slots with phantoms
-            for i in range(n_groups*group_size-len(students)):
-                students.append(phantom())
+            n_phantoms = (course.n_groups * course.group_size -
+                          len(course.students))
+    else:
+        n_phantoms = 0
 
-    students.sort(key = strength)
+    course.students = course.students + [phantom() for i in
+                                                 range(n_phantoms)]
 
-    n_groups = len(students)/group_size
-
-    # assign each student their class rank and what mtile of the class
-    # they are in (quartile for qroups of 4
-    for i in range(len(students)):
-        students[i][rank] = i
-        students[i]['mtile'] = i/n_groups
-
+    if len(course.students) != course.group_size * course.n_groups:
+        raise InternalError("Phantom adding didn't give correct Group balance")
     
+    course.students.sort(key = strengths)
+
     # randomly assort students into groups
-    mtiles = [students[n_groups*i:(n_groups*(i+1))] for i in range(group_size)]
+    mtiles = [course.students[course.n_groups*i:(course.n_groups*(i+1))]
+              for i in range(course.group_size)]
 
     for mtile in mtiles:
         random.shuffle(mtile)
@@ -183,10 +184,10 @@ def group_setup(students, group_size, name_flag, uneven_size='low'):
     i = 0
     while i < len(mtiles[0]):
         # grab one student from each mtile
-        g = group([mtile[i] for mtile in mtiles], i+1)
+        g = Group([mtile[i] for mtile in mtiles], i+1)
         groups.append(g)
         i += 1
 
-    return groups, students, group_size
+    return groups
     
     
