@@ -31,7 +31,7 @@ import os
 
 if len(sys.argv) > 1:
     try:
-        groups, status = controller.run(sys.argv[1])
+        groups, status, outdir = controller.run(sys.argv[1])
         if not status:
             print('Could not completely meet all rules')
     except Exception as e:
@@ -40,12 +40,19 @@ else:
     # import gui stuff only if we are going to use it
     from Tkinter import *
     from tkFileDialog import askopenfilename
-    from tkMessageBox import showerror
+    from tkMessageBox import showerror, showinfo
 
     path = askopenfilename()
     d, f = os.path.split(path)
     os.chdir(d)
     try:
-        controller.run(f)
+        groups, status, outdir = controller.run(f)
     except Exception as e:
-        showerror('Error', '{0}'.format(e))
+        showerror('GroupEng Error', '{0}'.format(e))
+
+    if status:
+        showinfo("GroupEng", "GroupEng Run Succesful\n Output in: {0}".format(outdir))
+    else:
+        showinfo("GroupEng", "GroupEng Ran Correctly but not all rules could be met\n"
+                 "Output in: {0}".format(outdir))
+        

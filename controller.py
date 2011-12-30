@@ -142,7 +142,7 @@ def run(input_deck):
                 
     report.write('\n')
         
-    return groups, suceeded
+    return groups, suceeded, outdir
 
 def group_output(groups, outf, identifier, sep = ', '):
     groups.sort(key = lambda x: x.group_number)
