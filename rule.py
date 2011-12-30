@@ -506,7 +506,6 @@ def apply_rules_list(rules, groups, students):
     success = True
     for rule in rules:
         success = apply_rule(rule, groups, students) and success
-        print("post: {0}: {1}".format(rule, [rules[1].check(g) for g in groups]))
     return success
 
 

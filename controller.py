@@ -88,7 +88,7 @@ def run(input_deck):
     run_name = os.path.splitext(input_deck)[0]
     
     outdir = 'groups_{0}_{1}'.format(run_name,
-                                     time.strftime('%Y-%m-%d_%H:%M:%S'))
+                                     time.strftime('%Y-%m-%d_%H-%M-%S'))
 
     os.mkdir(outdir)
     os.chdir(outdir)
