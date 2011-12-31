@@ -32,15 +32,18 @@ def numberize(n):
     if the string is a float return that float
     else return the string
     '''
-    try:
+    if isinstance(n, basestring):
         try:
-            return int(n)
-        except ValueError:
             try:
-                return float(n)
+                return int(n)
             except ValueError:
-                return n
-    except TypeError:
+                try:
+                    return float(n)
+                except ValueError:
+                    return n
+        except TypeError:
+            return n
+    else:
         return n
 
 
