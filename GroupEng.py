@@ -24,10 +24,10 @@ use by the rest of GroupEng
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
 
-import controller
 import sys
 import os.path
 import os
+from src import controller
 
 if len(sys.argv) > 1:
     try:

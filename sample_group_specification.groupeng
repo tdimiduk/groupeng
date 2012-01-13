@@ -1,0 +1,25 @@
+classlist : sample_class_1.csv
+
+student_identifier : ID
+
+group_size : 4+
+
+- cluster : Gender
+  values : M
+
+- cluster : Ethnicity
+  values : (B, H)
+
+- aggregate : Project choice
+
+- distribute : Major
+  values : [Mech E, CS, Civ E, EE]
+
+- distribute : Skill1
+  value : y
+- distribute : Skill2
+  value : y
+- distribute : Skill3
+  value : y
+
+- balance : GPA 

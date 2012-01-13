@@ -1,0 +1,57 @@
+# Example input file for GroupEng
+ 
+# Lines that start with a # are comments and GroupEng ignores them
+
+# The file that containes the student list.  This should be a csv
+# file as exported from excel
+# Either store the input deck in the same directory as the class
+# file,  or give the full path to the class file here
+classlist : sample_class_1.csv
+
+# Student Identifier (name, id number, ...) should be unique
+student_identifier : ID
+
+# group_size: number of students per group immediately followed by + or -
+# If the students don't divide evenly into group_size person groups,
+# group size can be + (have an extra person in some groups), or 
+# - (have one less person in some groups)
+group_size : 4+
+
+# Don't isolate women
+- cluster : Gender
+  values : M
+
+# Don't isolate minorities
+- cluster : Ethnicity
+# [ ,  ] for a list where each value is clustered individually
+# ( , ) for union of values so cluster treating all the values equally
+  values : (B, H)
+
+# Put students on the same project choice together
+- aggregate : Project choice
+
+# Multidisciplinary teams
+- distribute : Major
+  values : [Mech E, CS, Civ E, EE]
+
+# Ensure Teams have all needed skills
+- distribute : Skill1
+  value : y
+- distribute : Skill2
+  value : y
+- distribute : Skill3
+  value : y
+
+# You will usually want to put the balance rule last.  It turn out the
+# program is pretty good at meeting balance rules even with low
+# priority, but locking in groups by gpa balance at high priority
+# makes it hard to meet other rules
+- balance : GPA
+# you can specifiy a tol (tolerance) argument (below, commented out),
+#  but generally that is not necessary, the default value of .5
+#  generally works well, but tweaking this value may allow you to coax
+#  better balanced groups
+
+# tol : .5
+
+
