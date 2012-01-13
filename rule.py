@@ -539,12 +539,16 @@ for rule in [Aggregate, Distribute, Cluster, Balance]:
     _all_rules[rule.name.lower()] = rule
     
 def make_rule(input_spec, course):
-    for key in input_spec.keys():
-        if _all_rules.has_key(key):
-            r = _all_rules[key]
-            attribute = input_spec[key]
-            kwargs = input_spec.copy()
-            kwargs.pop(key)
-            return r(attribute, course, **kwargs)
-    raise InvalidRuleSpecification(input_spec)
+    try:
+        r = _all_rules[input_spec['name']]
+    except KeyError:
+        InvalidRuleSpecification(input_spec)
+
+    attribute = input_spec['attribute']
+    kwargs = input_spec.copy()
+    kwargs.pop('attribute')
+    kwargs.pop('name')
+        
+    return r(attribute, course, **kwargs)
+
             

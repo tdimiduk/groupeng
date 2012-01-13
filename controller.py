@@ -18,13 +18,12 @@
 import time
 import os
 from operator import attrgetter
-import yaml
 import group
 from utility import mean, std
 from rule import make_rule, apply_rules_list, Balance, Distribute
 from student import load_classlist
 from course import Course
-
+import parser
 
 class InputDeckError(Exception):
     def __init__(self, e):
@@ -42,17 +41,14 @@ def run(input_deck):
 
     Parameters
     ----------
-    input_deck: basestring: filename of yaml file
-        Input file specifying class file, grouping rule, output options
+    input_deck: basestring: filename
+        Input file specifying class information and grouping rules
 
     Output
     ------
     Output files determined by Input deck
     """
-    try:
-        dek = yaml.load(file(input_deck))
-    except (TypeError, yaml.parser.ParserError) as e:
-        raise InputDeckError(e)
+    dek = parser.read_input(input_deck)
     
     students = load_classlist(dek['classlist'], dek.get('student_identifier'))
     identifier = students[0].identifier
