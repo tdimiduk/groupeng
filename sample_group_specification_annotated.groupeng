@@ -23,16 +23,17 @@ group_size : 4+
 
 # Don't isolate minorities
 - cluster : Ethnicity
-# [ ,  ] for a list where each value is clustered individually
-# ( , ) for union of values so cluster treating all the values equally
-  values : (B, H)
+# a , b for a list where each value is clustered individually
+# c = d for union of values, treat them both as one value,
+# you can chain equals (c = d = f = ...) for larger unions
+  values : B = H
 
 # Put students on the same project choice together
 - aggregate : Project choice
 
 # Multidisciplinary teams
 - distribute : Major
-  values : [Mech E, CS, Civ E, EE]
+  values : Mech E, CS, Civ E, EE
 
 # Ensure Teams have all needed skills
 - distribute : Skill1

@@ -59,10 +59,14 @@ def read_input(infile):
                 i += 1
                 line = lines[i]
                 key, val = split_key(line)
-                if re.match('\[(.+,)+.+\]$', val):
-                    val = [v.strip() for v in val.strip('[]').split(',')]
-                rule[key] = val
-            
+                val = tuple([v.strip() for v in val.split(',')])
+                vals = []
+                for v in val:
+                    vs = tuple([vi.strip() for vi in v.split('=')])
+                    if len(vs) == 1:
+                        vs = vs[0]
+                    vals.append(vs)
+                rule[key] = vals
             rules.append(rule)
         else:
             raise InputError(line, i+1, infile.name)

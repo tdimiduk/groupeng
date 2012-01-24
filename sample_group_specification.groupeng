@@ -8,12 +8,12 @@ group_size : 4+
   values : M
 
 - cluster : Ethnicity
-  values : (B, H)
+  values : B = H
 
 - aggregate : Project choice
 
 - distribute : Major
-  values : [Mech E, CS, Civ E, EE]
+  values : Mech E, CS, Civ E, EE
 
 - distribute : Skill1
   value : y
