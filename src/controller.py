@@ -18,7 +18,7 @@
 import time
 import os
 from operator import attrgetter
-import group
+from group import make_initial_groups
 from utility import mean, std
 from rule import make_rule, apply_rules_list, Balance, Distribute
 from student import load_classlist
@@ -58,7 +58,7 @@ def run(input_deck):
 
     balance_rules = filter(lambda x: isinstance(x, Balance), rules)
 
-    groups = group.make_initial_groups(course, balance_rules)
+    groups = make_initial_groups(course, balance_rules)
 
     # Add a rule to distribute phantoms to avoid having more than one phantom
     # per group, put it first so that it is highest priority
@@ -77,6 +77,12 @@ def run(input_deck):
     if failures(rules[0]) !=  0:
         raise UnevenGroups()
 
+
+    # now get rid of the phantoms so they don't affect the output
+    for group in groups:
+        group.students = [s for s in group.students if s.data[identifier] !=
+                          'phantom'] 
+    
     ############################################################################
     # Output
     ############################################################################

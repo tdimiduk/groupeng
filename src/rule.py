@@ -400,6 +400,10 @@ class Aggregate(NumberBased):
         count = Counter(students, itemgetter(self.attribute))
 
         no_value = count.pop(None, 0)
+
+        if len(count.keys()) == 1:
+            # only one kind of student in the group, so aggregate is satisfied
+            return True
         
         for key, number in count.iteritems():
             if (number in self._target_numbers(key) or
