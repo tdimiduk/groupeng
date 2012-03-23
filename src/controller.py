@@ -77,11 +77,12 @@ def run(input_deck):
     if failures(rules[0]) !=  0:
         raise UnevenGroups()
 
-
     # now get rid of the phantoms so they don't affect the output
     for group in groups:
         group.students = [s for s in group.students if s.data[identifier] !=
-                          'phantom'] 
+                          'phantom']
+
+    course.students = [s for s in course.students if s.data[identifier] != 'phantom']
     
     ############################################################################
     # Output
@@ -100,10 +101,10 @@ def run(input_deck):
     
     group_output(groups, outfile('groups.csv'), identifier)
     group_output(groups, outfile('groups.txt'), identifier, sep = '\n')
-    student_full_output(students, identifier, outfile('classlist.csv'))
+    student_full_output(course.students, identifier, outfile('classlist.csv'))
 
         
-    report = outfile('statistics.txt')
+    report = outxbfile('statistics.txt')
         
     report.write('Ran GroupEng on: {0} with students from {1}\n\n'.format(
             input_deck, dek['classlist']))
@@ -149,14 +150,12 @@ def run(input_deck):
 def group_output(groups, outf, identifier, sep = ', '):
     groups.sort(key = lambda x: x.group_number)
     for g in groups:
-        students = sorted(filter(lambda s: s.data[identifier] != 'phantom',
-                                 g.students), key = lambda x: x[identifier]) 
+        students = sorted(g.students, key = lambda x: x[identifier]) 
         outf.write('Group {0}{1}{2}\n'.format(g.group_number, sep,
                                              sep.join([str(s[identifier]) for s in
                                                        students]))) 
 
 def student_full_output(students, identifier, outf):
-    students = filter(lambda x: x[identifier] != 'phantom', students)
     outf.write(', '.join(students[0].headers)+'\n')
     for s in students:
         outf.write(s.full_record()+'\n')
