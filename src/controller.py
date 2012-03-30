@@ -23,7 +23,9 @@ from utility import mean, std
 from rule import make_rule, apply_rules_list, Balance, Distribute
 from student import load_classlist
 from course import Course
-import parser
+import input_parser
+
+
 
 class InputDeckError(Exception):
     def __init__(self, e):
@@ -48,7 +50,7 @@ def run(input_deck):
     ------
     Output files determined by Input deck
     """
-    dek = parser.read_input(input_deck)
+    dek = input_parser.read_input(input_deck)
     
     students = load_classlist(dek['classlist'], dek.get('student_identifier'))
     identifier = students[0].identifier
@@ -104,7 +106,7 @@ def run(input_deck):
     student_full_output(course.students, identifier, outfile('classlist.csv'))
 
         
-    report = outxbfile('statistics.txt')
+    report = outfile('statistics.txt')
         
     report.write('Ran GroupEng on: {0} with students from {1}\n\n'.format(
             input_deck, dek['classlist']))
@@ -144,7 +146,9 @@ def run(input_deck):
         report.write('\n')
                 
     report.write('\n')
-        
+
+    os.chdir('..')
+    
     return groups, suceeded, outdir
 
 def group_output(groups, outf, identifier, sep = ', '):

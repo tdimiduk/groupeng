@@ -39,6 +39,8 @@ class Course(object):
 
         self.n_groups = len(students) // self.group_size
 
+        #TODO: check carefully that things are handled correctly in the case
+        #where len(students) divides evenly into increased group size.  
         remainder = len(students) % self.group_size
         if remainder:
             if self.uneven_size == '+':
@@ -49,3 +51,6 @@ class Course(object):
                 
         if self.n_groups * self.group_size < len(students):
             self.n_groups += 1
+
+        # TODO: should we add phantoms here?  We can set their strengths to
+        # None, then give them values later.  

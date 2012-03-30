@@ -1,0 +1,7 @@
+classlist : sample_class_1.csv
+
+student_identifier : ID
+
+group_size : 4-
+
+- balance : GPA 
