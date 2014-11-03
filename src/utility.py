@@ -36,3 +36,23 @@ def std(l, key = lambda x: x):
 
     return math.sqrt(total/len(v))
 
+def numberize(n):
+    '''Turns a string into a number
+
+    if the string is an integer return that integer
+    if the string is a float return that float
+    else return the string
+    '''
+    if isinstance(n, basestring):
+        try:
+            try:
+                return int(n)
+            except ValueError:
+                try:
+                    return float(n)
+                except ValueError:
+                    return n
+        except TypeError:
+            return n
+    else:
+        return n

@@ -16,61 +16,42 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Student record.  Creating Student record from a csv (excel) file.  
+Student record.  Creating Student record from a csv (excel) file.
 
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
+from utility import numberize
 
 import csv
 
 group_number = 'Group Number'
 
-def numberize(n):
-    '''Turns a string into a number
-
-    if the string is an integer return that integer
-    if the string is a float return that float
-    else return the string
-    '''
-    if isinstance(n, basestring):
-        try:
-            try:
-                return int(n)
-            except ValueError:
-                try:
-                    return float(n)
-                except ValueError:
-                    return n
-        except TypeError:
-            return n
-    else:
-        return n
 
 
 class Student(object):
     """
     """
-    
+
     def __init__(self, data = {}, headers = [], identifier=None):
         """
-        
+
         Arguments:
-        :param attributes: 
-        :type attributes: 
-        
+        :param attributes:
+        :type attributes:
+
         """
         self.identifier = identifier
         if identifier == None:
             # if they don't give us an identifier, just use the first column
             self.identifier = headers[0]
-            
+
         self.data = data
         for key, val in self.data.items():
             if val in ['', '0']:
                 self.data[key] = None
             else:
                 self.data[key] = numberize(val)
-            
+
         self.group = None
         self.headers = list(headers)
         if group_number not in self.headers:
@@ -79,21 +60,18 @@ class Student(object):
     def __getitem__(self, x):
         if x == group_number:
             return self.group.group_number
-        return self.data.get(x)
-
-    def __setitem__(self, x, val):
-        self.data[x] = val
-
+        else:
+            return self.data[x]
     def __str__(self):
         return "<Student : {0}>".format(self.data)
 
     def __repr__(self):
         return "Student(data={0}, headers={1}, identifier={2})".format(
             self.data, self.headers, self.identifier)
-        
+
     def full_record(self):
         return ', '.join([str(self[h]) for h in self.headers])
-    
+
 def attribute_match(attribute, value):
     try:
         value.__iter__()
@@ -105,11 +83,11 @@ def attribute_differs(attribute, value):
 
 
 def load_classlist(filename, identifier):
-    inf = csv.reader(file(filename))
+    inf = csv.reader(file(filename, 'U'))
 
     # Strip excess spaces from the header names, since this can lead to tricky
     # bugs later
-    headers = [h.strip() for h in inf.next()]
+    headers = [h.strip() for h in inf.next() if h.strip() is not '']
     # now make the students from the file
     students = []
     for s in inf:
@@ -122,9 +100,5 @@ def load_classlist(filename, identifier):
                 d[h] = s[i].strip()
             # make a copy of headers so Student doesn't change it
             students.append(Student(d, list(headers), identifier))
-        
+
     return students
-
-        
-
-        

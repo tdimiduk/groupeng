@@ -16,6 +16,7 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+from utility import numberize
 
 class InputError(Exception):
     def __init__(self, line, lineno, inf):
@@ -28,11 +29,11 @@ class InputError(Exception):
 
 def read_input(infile):
     if isinstance(infile, basestring):
-        infile = file(infile)
+        infile = file(infile, 'U')
 
     lines = infile.readlines()
     lines = [l.strip() for l in lines if l.strip() != '' and l.strip()[0] != '#']
-    
+
     dek = {}
 
     rules = []
@@ -62,19 +63,19 @@ def read_input(infile):
                 val = tuple([v.strip() for v in val.split(',')])
                 vals = []
                 for v in val:
-                    vs = tuple([vi.strip() for vi in v.split('=')])
+                    vs = tuple([numberize(vi.strip()) for vi in v.split('=')])
                     if len(vs) == 1:
                         vs = vs[0]
-                    vals.append(vs)
+                    vals.append(numberize(vs))
                 rule[key] = vals
             rules.append(rule)
         else:
             raise InputError(line, i+1, infile.name)
-                     
+
         i += 1
 
     dek['rules'] = rules
-        
+
     return dek
 
 def split_key(st):

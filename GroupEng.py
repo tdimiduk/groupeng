@@ -30,12 +30,18 @@ import os
 from src import controller
 
 if len(sys.argv) > 1:
-    try:
+    debug = False
+    if debug:
         groups, status, outdir = controller.run(sys.argv[1])
         if not status:
             print('Could not completely meet all rules')
-    except Exception as e:
-        print(e)
+    else:
+        try:
+            groups, status, outdir = controller.run(sys.argv[1])
+            if not status:
+                print('Could not completely meet all rules')
+        except Exception as e:
+            print(e)
 else:
     # import gui stuff only if we are going to use it
     from Tkinter import *
@@ -55,4 +61,3 @@ else:
     else:
         showinfo("GroupEng", "GroupEng Ran Correctly but not all rules could be met\n"
                  "Output in: {0}".format(outdir))
-        
