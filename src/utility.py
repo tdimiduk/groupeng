@@ -16,16 +16,15 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import group
 
 def mean(l, key = lambda x: x):
-    if isinstance(l, group.Group):
+    if hasattr(l, 'students'):
         l = l.students
-    l = [x for x in l if not hasattr(x,'key') or x.key is not None]
-    return reduce(lambda x, y: x+key(y), l, 0.0)/len(l)
+    l = [key(x) for x in l if key(x) is not None]
+    return sum(l)/len(l)
 
 def std(l, key = lambda x: x):
-    if isinstance(l, group.Group):
+    if hasattr(l, 'students'):
         l = l.students
     l = [x for x in l if not hasattr(x,'key') or x.key is not None]
     v = [key(x) for x in l]
@@ -43,16 +42,16 @@ def numberize(n):
     if the string is a float return that float
     else return the string
     '''
-    if isinstance(n, basestring):
+    if isinstance(n, (int, float)):
+        return n
+
+    try:
         try:
+            return int(n)
+        except ValueError:
             try:
-                return int(n)
+                return float(n)
             except ValueError:
-                try:
-                    return float(n)
-                except ValueError:
-                    return n
-        except TypeError:
-            return n
-    else:
+                return n
+    except TypeError:
         return n

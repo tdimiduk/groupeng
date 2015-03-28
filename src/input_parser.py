@@ -16,20 +16,12 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-from utility import numberize
-
-class InputError(Exception):
-    def __init__(self, line, lineno, inf):
-        self.line
-        self.lineno
-        self.inf
-    def __str__(self):
-        return "Can't understand: {0} at line {1} of {2}".format(
-            self.line, self.lineno, self.inf)
+from .utility import numberize
+from .errors import InputError
 
 def read_input(infile):
-    if isinstance(infile, basestring):
-        infile = file(infile, 'U')
+    if not hasattr(infile, 'readlines'):
+        infile = open(infile, 'U')
 
     lines = infile.readlines()
     lines = [l.strip() for l in lines if l.strip() != '' and l.strip()[0] != '#']

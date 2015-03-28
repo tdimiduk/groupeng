@@ -20,7 +20,7 @@ Student record.  Creating Student record from a csv (excel) file.
 
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
-from utility import numberize
+from .utility import numberize
 
 import csv
 
@@ -73,21 +73,27 @@ class Student(object):
         return ', '.join([str(self[h]) for h in self.headers])
 
 def attribute_match(attribute, value):
-    try:
-        value.__iter__()
+    if isinstance(value, (list, tuple)):
         return lambda x: x[attribute] in value
-    except AttributeError:
+    else:
         return lambda x: x[attribute] == value
+
 def attribute_differs(attribute, value):
     return lambda x: x[attribute] != value
 
 
 def load_classlist(filename, identifier):
-    inf = csv.reader(file(filename, 'U'))
+    inf = csv.reader(open(filename, 'U'))
+
+    # csv api changed in python3, be compatible with both
+    try:
+        header_line = inf.__next__()
+    except AttributeError:
+        header_line = inf.next()
 
     # Strip excess spaces from the header names, since this can lead to tricky
     # bugs later
-    headers = [h.strip() for h in inf.next() if h.strip() is not '']
+    headers = [h.strip() for h in header_line if h.strip() is not '']
     # now make the students from the file
     students = []
     for s in inf:

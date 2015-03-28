@@ -17,12 +17,12 @@
 
 """
 Student Groups.  Swapping students between groups, seting up initial random
-groups.  
+groups.
 
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
 
-import student
+from . import student
 import random
 
 class Group(object):
@@ -30,16 +30,16 @@ class Group(object):
     Group of students
 
     Stores a list of students and the rules that the grouping is supposed to
-    obey.  
+    obey.
     """
-    
+
     def __init__(self, students, group_number):
         """
-        
+
         Arguments:
-        :param students: 
-        :type students: 
-        
+        :param students:
+        :type students:
+
         """
         self.students = students
         self.group_number = group_number
@@ -67,7 +67,7 @@ class Group(object):
     @property
     def size(self):
         return len(self.students)
-    
+
     def can_take(self, student):
         g = set(self.students)
         g.remove(student)
@@ -103,7 +103,7 @@ def valid_swap(s1, s2):
             if not r.permissable_change(old, new):
                 return False
         return True
-               
+
     return (rules_permit(s1.group.rules, s1.group.students, l1) and
             rules_permit(s2.group.rules, s2.group.students, l2))
 
@@ -135,7 +135,7 @@ def make_initial_groups(course, balance_rules):
 
     def strengths(s):
         return [r.get_strength(s) for r in balance_rules]
-    
+
     # Need to find out who the weakest student is, but some students
     # may not have a gpa listed, in that case ignore them and keep
     # looking
@@ -169,7 +169,7 @@ def make_initial_groups(course, balance_rules):
 
     if len(course.students) != course.group_size * course.n_groups:
         raise InternalError("Students + Phantoms not divisible by groups")
-    
+
     course.students.sort(key = strengths)
 
     # randomly assort students into groups
@@ -188,5 +188,3 @@ def make_initial_groups(course, balance_rules):
         i += 1
 
     return groups
-    
-    

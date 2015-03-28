@@ -16,22 +16,25 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Grouping rules.  Definitions and functions for fixing groups.  
+Grouping rules.  Definitions and functions for fixing groups.
 
 .. moduleauthor:: Thomas G. Dimiduk tgd8@cornell.edu
 """
 
 
 import random
+import re
+from collections import Counter
 from operator import itemgetter
-from student import attribute_match
-from group import valid_swap, swap
-import utility
-from group import Group
+from .student import attribute_match
+from .group import valid_swap, swap
+from . import utility
+from .group import Group
 
 tries = 20
 
-
+def count_items(f):
+    return sum(1 for _ in f)
 
 def number(students, attribute, values):
     """
@@ -45,7 +48,7 @@ def number(students, attribute, values):
         Student attribute to count
     values: string
         values the attribute should have
-        
+
     Returns
     -------
     number: int
@@ -54,7 +57,7 @@ def number(students, attribute, values):
     # Handle input of a Group instead of a list of students
     if isinstance(students, Group):
         students = students.students
-    return len(filter(attribute_match(attribute, values), students))
+    return count_items(filter(attribute_match(attribute, values), students))
 
 class InvalidValues(Exception):
     def __init__(self, rule, attribute, bad_values = None):
@@ -74,7 +77,7 @@ class AttributeNotFound(Exception):
         return "When creating rule <{0} : {1}> attribute {1} not found in \
 class, valid attributes are: {2}".format(self.rule, self.attribute,
                                          self.all_attributes)
-    
+
 class NoValidValues(InvalidValues):
     def __str__(self):
         return "When creating rule: <{0} : {1}>, no values were specified".format(
@@ -84,22 +87,22 @@ class Rule(object):
     """
     Base class for all grouping rules
     """
-    
+
     def __init__(self, attribute, course, values = 'all', weight = None, **kwargs):
         self.attribute = attribute
 
         if attribute not in course.students[0].headers:
             raise AttributeNotFound(self.name, attribute,
                                     course.students[0].headers)
-        
+
         all_values = set([s[attribute] for s in course.students])
-        try: 
+        try:
             all_values.remove(None)
         except KeyError:
             # ignore error if None is not present, we just want to make
             # sure it isn't
-            pass         
-            
+            pass
+
         try:
             if values.lower() == 'all':
                 values = sorted(list(all_values))
@@ -107,7 +110,7 @@ class Rule(object):
             # Attribute error probably means values[0] is not a string, that is
             # fine, just pretend we failed the if
             pass
-        
+
         try:
             values.__iter__()
         except AttributeError:
@@ -115,11 +118,16 @@ class Rule(object):
             values = [values]
         self.values = values
         for i, value in enumerate(self.values):
-            # TODO: make a proper regular expression to match (a, b, ...)
-            if isinstance(value, basestring) and (value[0] == '(' and
-                                                  value[-1] == ')'):
+            # use presence of a capitalize function to identify a string an a
+            # python 2/3 independent way
+            # Match things like (a, b, ...)
+            if (hasattr(value, 'capitalize')
+                and re.match("[(].*(, +.*)+[)]", value)):
                 self.values[i] = tuple((v.strip() for v in
                                         value[1:-1].split(',')))
+
+        if not isinstance(self.values, (tuple, list)):
+            self.values = [self.values]
 
         flatten = set()
         for value in self.values:
@@ -127,22 +135,25 @@ class Rule(object):
                 flatten = flatten.union(value)
             else:
                 flatten.add(value)
+
+
         if not flatten.issubset(all_values.union(set(['phantom']))):
             raise InvalidValues(self.name, attribute,
-                                flatten.difference(all_values)) 
+                                flatten.difference(all_values))
+
 
         if len(self.values) == 0:
             raise NoValidValues(self.name, attribute)
 
         # TODO add capability to collapse similar attributes
-            
+
         # weight ignored for now
 
         self._init(attribute, course, values = 'all', weight = None, **kwargs)
 
     def _init(self, attribute, course, values = 'all', weight = None, **kwargs):
         raise NotImplemented
-        
+
     def attribute_match(self, student, attribute=None):
         if attribute is not None:
             if student[self.attribute] == attribute:
@@ -154,7 +165,7 @@ class Rule(object):
                 return 1
             else:
                 return 0
-        
+
     def remedy(self, group, groups, students):
         # returns true if it managed to satisfy the rule without
         # breaking any others, returns false otherwise
@@ -214,13 +225,13 @@ class Cluster(Rule):
                     return s[self.attribute] and s[self.attribute] in value
 
             targets = filter(target_group, groups)
-            if len(targets) == 0:
+            if count_items(targets) == 0:
                 return False
             success = (find_target_and_swap(student, targets, target_student)
                        and success)
 
         return success
-    
+
 class Balance(Rule):
     name = 'Balance'
     def _init(self, attribute, course, value = 'all', weight = None, tol = None,
@@ -253,7 +264,7 @@ class Balance(Rule):
 
     def _fix(self, student, groups, students):
         group = student.group
-        if (student,utility.mean(group, self.get_strength) - self.mean) > 0:
+        if utility.mean(group, self.get_strength) - self.mean > 0:
             test = lambda x: utility.mean(x, self.get_strength) < self.mean
         else:
             test = lambda x: utility.mean(x, self.get_strength) > self.mean
@@ -262,7 +273,7 @@ class Balance(Rule):
 
         short_list = filter(lambda g: abs(utility.mean(g,
                                                        self.get_strength) -
-                                          self.mean) > self.tol, targets)  
+                                          self.mean) > self.tol, targets)
 
         try:
             if find_target_and_swap(student, short_list):
@@ -289,8 +300,11 @@ class NoTargets(Exception):
 class NumberBased(Rule):
     """
     Base class for rules that operate based on number of students with a
-    specific attribute.  
+    specific attribute.
     """
+
+    # note: this is _init not __init__, it is called at the end of __init__ in
+    # to do subclass specific init stuff.
     def _init(self, attribute, course, values = 'all', weight = None,
                  **kwargs):
         self.group_size = course.group_size
@@ -300,7 +314,7 @@ class NumberBased(Rule):
         self.values.sort(key=lambda x: self.numbers[x])
         self.n_groups = course.n_groups
 
-        
+
     def valid_directions(self, n, attribute_val):
         up = False
         down = False
@@ -318,7 +332,7 @@ class NumberBased(Rule):
     def can_accept(self, group, attribute_val):
         return (number(group, self.attribute, attribute_val) + 1) in self._target_numbers(
             attribute_val)
-        
+
     def _check(self, students):
         for value in self.values:
             if number(students, self.attribute, value) not in self._target_numbers(
@@ -337,12 +351,12 @@ class NumberBased(Rule):
             up, down = self.valid_directions(n, my_value)
             targets = []
             # if we want less of the type this student is, look for groups to
-            # send them to.  
+            # send them to.
             if down: # find groups we could give a student to
                 targets.extend(filter(lambda g: self.can_accept(g, my_value),
                                       groups))
             # if we want more of this student, don't try to swap them, one of
-            # the other iterations of rule.remedy will try to bring one in.  
+            # the other iterations of rule.remedy will try to bring one in.
             if not targets:
                 return False #raise NoTargets(self)
             return find_target_and_swap(student, targets)
@@ -350,7 +364,7 @@ class NumberBased(Rule):
 
     def _target_numbers(self, value):
         raise NotImplemented()
-        
+
 class Distribute(NumberBased):
     name = 'Distribute'
 
@@ -362,6 +376,7 @@ class Distribute(NumberBased):
             low = n // self.n_groups
             return (low, low+1)
 
+'''
 class Counter(dict):
     def __init__(self, in_list, key = lambda x: x):
         for item in in_list:
@@ -388,7 +403,8 @@ class Counter(dict):
                 n = number
                 max_key = key
         return max_key
-        
+'''
+
 class Aggregate(NumberBased):
     name = 'Aggregate'
 
@@ -397,15 +413,16 @@ class Aggregate(NumberBased):
         return n >= halfway, n <= halfway
 
     def _check(self, students):
-        count = Counter(students, itemgetter(self.attribute))
+        count = Counter(s[self.attribute] for s in students)
 
         no_value = count.pop(None, 0)
 
         if len(count.keys()) == 1:
             # only one kind of student in the group, so aggregate is satisfied
             return True
-        
-        for key, number in count.iteritems():
+
+        # TODO: Fixme
+        for key, number in count.most_common():
             if (number in self._target_numbers(key) or
                 # Check if the group fits accounting for phantoms and missing
                 # data (which can effectively be counted as correct in this
@@ -427,24 +444,24 @@ class Aggregate(NumberBased):
             return False
         # if the new group is not completely valid, check to see if it is doing
         # better than the current one
-        if (Counter(old, itemgetter(self.attribute)).largest() <=
-            Counter(new, itemgetter(self.attribute)).largest()):
+        if (Counter([o[self.attribute] for o in old]).most_common(1)[0][1] <=
+            Counter([n[self.attribute] for n in new]).most_common(1)[0][1]):
             return True
         else:
             return False
-    
+
     def _is(self, value):
         def match(s):
             return s[self.attribute] == value or s[self.attribute] == None
         return match
     def _is_not(self, value):
         return lambda s: s[self.attribute] != value
-    
+
     def remedy(self, group, groups, students):
         if group.happy:
             return True
-        
-        count = Counter(group.students, itemgetter(self.attribute))
+
+        count = Counter(s[self.attribute] for s in group.students)
 
         # Remove None, students without a value for this attribute should be
         # sort of ignored
@@ -453,7 +470,7 @@ class Aggregate(NumberBased):
 
         # Try to fill the group with students having the value it has the most
         # of currently
-        largest = count.largest()
+        largest = count.most_common(1)[0][0]
         send_away = filter(self._is_not(largest), group.students)
         targets = filter(lambda g: self.can_spare(g, largest), groups)
 
@@ -461,7 +478,7 @@ class Aggregate(NumberBased):
             find_target_and_swap(student, targets, self._is(largest))
 
         return group.happy
-        
+
 
     def _target_numbers(self, value):
         target = self.numbers[value]
@@ -470,8 +487,8 @@ class Aggregate(NumberBased):
         else:
             return [0, self.group_size]
 
-                          
-        
+
+
 class SwapButNotFix:
     def __init__(self, s1, s2):
         self.s1 = s1
@@ -486,7 +503,7 @@ def find_target_and_swap(student, targets, target_student=lambda s: True):
         return False
 
 def find_swap_target(student, targets, target_student=lambda s: True):
-    random.shuffle(targets)
+    random.shuffle(list(targets))
     for group in targets:
         random.shuffle(group.students)
         for other in group.students:
@@ -495,6 +512,11 @@ def find_swap_target(student, targets, target_student=lambda s: True):
 
     return False
 
+def all_happy(groups):
+    for group in groups:
+        if not group.happy:
+            return False
+    return True
 
 def apply_rule(rule, groups, students, try_number=0):
     random.shuffle(groups)
@@ -505,16 +527,16 @@ def apply_rule(rule, groups, students, try_number=0):
         if not group.happy:
             rule.remedy(group, groups, students)
 
-    if not reduce(lambda x, y: x and y.happy, groups, True):
+    if not all_happy(groups):
         if try_number < tries:
             return apply_rule(rule, groups, students, try_number+1)
         else:
             return False
     else:
         return True
-        
-        
-                
+
+
+
 def apply_rules_list(rules, groups, students):
     success = True
     for rule in rules:
@@ -537,11 +559,11 @@ class InvalidRuleSpecification(Exception):
             return "{0} rule looks like it is specified in the old format, \
 please update your input deck".format(self.spec['type'])
         return "Could not define rule with: {0}".format(self.spec)
-    
+
 _all_rules = {}
 for rule in [Aggregate, Distribute, Cluster, Balance]:
     _all_rules[rule.name.lower()] = rule
-    
+
 def make_rule(input_spec, course):
     try:
         r = _all_rules[input_spec['name']]
@@ -552,7 +574,5 @@ def make_rule(input_spec, course):
     kwargs = input_spec.copy()
     kwargs.pop('attribute')
     kwargs.pop('name')
-        
-    return r(attribute, course, **kwargs)
 
-            
+    return r(attribute, course, **kwargs)

@@ -18,12 +18,12 @@
 import time
 import os
 from operator import attrgetter
-from group import make_initial_groups
-from utility import mean, std
-from rule import make_rule, apply_rules_list, Balance, Distribute
-from student import load_classlist
-from course import Course
-import input_parser
+from .group import make_initial_groups
+from .utility import mean, std
+from .rule import make_rule, apply_rules_list, Balance, Distribute
+from .student import load_classlist
+from .course import Course
+from . import input_parser
 
 
 
@@ -36,14 +36,14 @@ see if it helps:\n{0}".format(self.e)
 
 class UnevenGroups(Exception):
     pass
-    
+
 def run(input_deck):
     """
     Run GroupEng as specified by input_deck
 
     Parameters
     ----------
-    input_deck: basestring: filename
+    input_deck: filename
         Input file specifying class information and grouping rules
 
     Output
@@ -51,7 +51,7 @@ def run(input_deck):
     Output files determined by Input deck
     """
     dek = input_parser.read_input(input_deck)
-    
+
     students = load_classlist(dek['classlist'], dek.get('student_identifier'))
     identifier = students[0].identifier
     course = Course(students, dek['group_size'], dek.get('uneven_size'))
@@ -74,7 +74,7 @@ def run(input_deck):
 
 
     def failures(r):
-        return reduce(lambda x, y: x+(1-r.check(y)), groups, 0)
+        return sum(1- r.check(g) for g in groups)
 
     if failures(rules[0]) !=  0:
         raise UnevenGroups()
@@ -85,34 +85,34 @@ def run(input_deck):
                           'phantom']
 
     course.students = [s for s in course.students if s.data[identifier] != 'phantom']
-    
+
     ############################################################################
     # Output
     ############################################################################
 
     run_name = os.path.splitext(input_deck)[0]
-    
+
     outdir = 'groups_{0}_{1}'.format(run_name,
                                      time.strftime('%Y-%m-%d_%H-%M-%S'))
 
     os.mkdir(outdir)
     os.chdir(outdir)
-    
+
     def outfile(o):
-        return file('{0}_{1}'.format(run_name,o),'w')
-    
+        return open('{0}_{1}'.format(run_name,o),'w')
+
     group_output(groups, outfile('groups.csv'), identifier)
     group_output(groups, outfile('groups.txt'), identifier, sep = '\n')
     student_full_output(course.students, identifier, outfile('classlist.csv'))
 
-        
+
     report = outfile('statistics.txt')
-        
+
     report.write('Ran GroupEng on: {0} with students from {1}\n\n'.format(
             input_deck, dek['classlist']))
-    
+
     report.write('Made {0} groups\n\n'.format(len(groups)))
-    
+
     for r in rules[1:]:
         n_fail = failures(r)
         if isinstance(r, Balance):
@@ -129,10 +129,10 @@ def run(input_deck):
             report.write('\n\n')
         else:
             report.write('{0} groups failed: {1}\n\n'.format(n_fail, r))
-    
+
     report.write('Group Summaries\n')
     report.write('---------------\n')
-        
+
     for g in groups:
         report.write('Group {0}: '.format(g.group_number))
         items = []
@@ -144,23 +144,22 @@ def run(input_deck):
                 items.append('Failed {0}'.format(r))
         report.write(', '.join(items))
         report.write('\n')
-                
+
     report.write('\n')
 
     os.chdir('..')
-    
+
     return groups, suceeded, outdir
 
 def group_output(groups, outf, identifier, sep = ', '):
     groups.sort(key = lambda x: x.group_number)
     for g in groups:
-        students = sorted(g.students, key = lambda x: x[identifier]) 
+        students = sorted(g.students, key = lambda x: x[identifier])
         outf.write('Group {0}{1}{2}\n'.format(g.group_number, sep,
                                              sep.join([str(s[identifier]) for s in
-                                                       students]))) 
+                                                       students])))
 
 def student_full_output(students, identifier, outf):
     outf.write(', '.join(students[0].headers)+'\n')
     for s in students:
         outf.write(s.full_record()+'\n')
-

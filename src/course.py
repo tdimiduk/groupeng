@@ -21,10 +21,7 @@ class Course(object):
         self.students_no_phantoms = list(students)
 
         # parse group size
-        if isinstance(group_size, basestring) and group_size[-1] in '+-':
-            self.uneven_size = group_size[-1]
-            self.group_size = int(group_size[:-1])
-        else:
+        try:
             self.group_size = int(group_size)
             if uneven_size.lower() == 'high':
                 self.uneven_size = '+'
@@ -36,11 +33,17 @@ class Course(object):
                     self.uneven_size = '+'
                 else:
                     self.uneven_size = '-'
+        except ValueError:
+            if group_size[-1] in '+-':
+                self.uneven_size = group_size[-1]
+                self.group_size = int(group_size[:-1])
+            else:
+                raise Exception("{0} cannot be interpreted as a group size".format(group_size))
 
         self.n_groups = len(students) // self.group_size
 
         #TODO: check carefully that things are handled correctly in the case
-        #where len(students) divides evenly into increased group size.  
+        #where len(students) divides evenly into increased group size.
         remainder = len(students) % self.group_size
         if remainder:
             if self.uneven_size == '+':
@@ -48,9 +51,9 @@ class Course(object):
                 self.group_size += 1
         else:
             self.uneven_size = '='
-                
+
         if self.n_groups * self.group_size < len(students):
             self.n_groups += 1
 
         # TODO: should we add phantoms here?  We can set their strengths to
-        # None, then give them values later.  
+        # None, then give them values later.
