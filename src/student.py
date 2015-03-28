@@ -57,6 +57,10 @@ class Student(object):
         if group_number not in self.headers:
             self.headers.append(group_number)
 
+    @property
+    def group_number(self):
+        return self.group.group_number
+
     def __getitem__(self, x):
         if x == group_number:
             return self.group.group_number
