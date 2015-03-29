@@ -145,6 +145,8 @@ class Rule(object):
         if len(self.values) == 0:
             raise NoValidValues(self.name, attribute)
 
+        self.all_values = all_values
+
         # TODO add capability to collapse similar attributes
 
         # weight ignored for now
@@ -192,9 +194,8 @@ class Rule(object):
     def __str__(self):
         return "<{0} {1} {2}>".format(self.name, self.attribute, self.values)
 
+
 class Cluster(Rule):
-    """
-    """
     name = 'Cluster'
     def _init(self, attribute, course, values = 'all', weight = None, **kwargs):
         pass
@@ -325,6 +326,8 @@ class NumberBased(Rule):
                 down = True
         return up, down
 
+    # TODO: BUG: This should may fail in cases where it shouldn't
+    # (aggregate and a group with 2 for example)
     def can_spare(self, group, attribute_val):
         return (number(group, self.attribute, attribute_val) - 1) in self._target_numbers(
             attribute_val)
@@ -365,9 +368,13 @@ class NumberBased(Rule):
     def _target_numbers(self, value):
         raise NotImplemented()
 
+    def count(self, l):
+        if hasattr(l, 'students'):
+            l = l.students
+        return Counter(s[self.attribute] for s in l)
+
 class Distribute(NumberBased):
     name = 'Distribute'
-
     def _target_numbers(self, value):
         n = self.numbers[value]
         if n % self.n_groups == 0:
@@ -376,79 +383,37 @@ class Distribute(NumberBased):
             low = n // self.n_groups
             return (low, low+1)
 
-'''
-class Counter(dict):
-    def __init__(self, in_list, key = lambda x: x):
-        for item in in_list:
-            self.tally(key(item))
-    def tally(self, key):
-        if self.get(key):
-            self[key] += 1
-        else:
-            self[key] = 1
-
-    def largest(self):
-        """
-        Returns the item with the largest count.
-
-        Notes
-        -----
-        If multiple items have an equal count it will return one of them, which
-        one is not defined
-        """
-        n = 0
-        max_key = None
-        for key, number in self.iteritems():
-            if number > n:
-                n = number
-                max_key = key
-        return max_key
-'''
 
 class Aggregate(NumberBased):
     name = 'Aggregate'
-
     def valid_directions(self, n, attribute_val):
         halfway = self._target_numbers(attribute_val)[1]/2.0
         return n >= halfway, n <= halfway
 
     def _check(self, students):
-        count = Counter(s[self.attribute] for s in students)
+        count = self.count(students)
 
         no_value = count.pop(None, 0)
 
-        if len(count.keys()) == 1:
-            # only one kind of student in the group, so aggregate is satisfied
-            return True
+        return len(count.keys()) == 1
 
-        # TODO: Fixme
-        for key, number in count.most_common():
-            if (number in self._target_numbers(key) or
-                # Check if the group fits accounting for phantoms and missing
-                # data (which can effectively be counted as correct in this
-                # case)
-                number + no_value in self._target_numbers(key) or
-                number + no_value > max(self._target_numbers(key))):
-                pass
-            else:
-                if len(count.keys()) < 2:
-                    import pdb; pdb.set_trace()
-                return False
-        return True
+    def apply(self, groups, students):
+        all_values = list(self.all_values)
+        random.shuffle(all_values)
+        for value in all_values:
+            def count(group):
+                return number(group, self.attribute, value)
 
-    def permissable_change(self, old, new):
-        if self._check(new):
-            return True
-        if self._check(old): # Not allowed to break it if the group was already
-                             # good
-            return False
-        # if the new group is not completely valid, check to see if it is doing
-        # better than the current one
-        if (Counter([o[self.attribute] for o in old]).most_common(1)[0][1] <=
-            Counter([n[self.attribute] for n in new]).most_common(1)[0][1]):
-            return True
-        else:
-            return False
+            go = sum(count(g) for g in groups)
+            while go:
+                groups = sorted(groups, key=count, reverse=True)
+                group = groups[0]
+                groups = groups[1:]
+                group.add_rule(self)
+                for s in filter(self._is_not(value), group.students):
+                    targets = [g for g in groups if count(group)]
+                    find_target_and_swap(s, targets, self._is(value))
+                go = sum(count(g) for g in groups)
 
     def _is(self, value):
         def match(s):
@@ -456,29 +421,6 @@ class Aggregate(NumberBased):
         return match
     def _is_not(self, value):
         return lambda s: s[self.attribute] != value
-
-    def remedy(self, group, groups, students):
-        if group.happy:
-            return True
-
-        count = Counter(s[self.attribute] for s in group.students)
-
-        # Remove None, students without a value for this attribute should be
-        # sort of ignored
-        if None in count:
-            del count[None]
-
-        # Try to fill the group with students having the value it has the most
-        # of currently
-        largest = count.most_common(1)[0][0]
-        send_away = filter(self._is_not(largest), group.students)
-        targets = filter(lambda g: self.can_spare(g, largest), groups)
-
-        for student in send_away:
-            find_target_and_swap(student, targets, self._is(largest))
-
-        return group.happy
-
 
     def _target_numbers(self, value):
         target = self.numbers[value]
@@ -519,7 +461,10 @@ def all_happy(groups):
     return True
 
 def apply_rule(rule, groups, students, try_number=0):
-    random.shuffle(groups)
+    if isinstance(rule, Aggregate):
+        rule.apply(groups, students)
+    else:
+        random.shuffle(groups)
     for group in groups:
         # add rule checks and will not add the rule twice, so we can just do
         # this
@@ -528,6 +473,8 @@ def apply_rule(rule, groups, students, try_number=0):
             rule.remedy(group, groups, students)
 
     if not all_happy(groups):
+        # TODO: add some random swap attempts not specific to a rule
+        # to allow shuffling between happy groups
         if try_number < tries:
             return apply_rule(rule, groups, students, try_number+1)
         else:
