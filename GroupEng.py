@@ -32,12 +32,12 @@ from src import controller
 if len(sys.argv) > 1:
     debug = True
     if debug:
-        groups, status, outdir = controller.run(sys.argv[1])
+        status, outdir = controller.run(sys.argv[1])
         if not status:
             print('Could not completely meet all rules')
     else:
         try:
-            groups, status, outdir = controller.run(sys.argv[1])
+            status, outdir = controller.run(sys.argv[1])
             if not status:
                 print('Could not completely meet all rules')
         except Exception as e:
@@ -52,7 +52,7 @@ else:
     d, f = os.path.split(path)
     os.chdir(d)
     try:
-        groups, status, outdir = controller.run(f)
+        status, outdir = controller.run(f)
     except Exception as e:
         showerror('GroupEng Error', '{0}'.format(e))
 

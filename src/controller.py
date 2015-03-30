@@ -54,41 +54,28 @@ def run(input_deck):
 
     students = load_classlist(dek['classlist'], dek.get('student_identifier'))
     identifier = students[0].identifier
-    course = Course(students, dek['group_size'], dek.get('uneven_size'))
+    dek_rules = dek['rules']
 
-    rules = [make_rule(r, course) for r in dek['rules']]
+    # This adds support for a "Hard" aggregate. If your first rule is
+    # aggregate, we split the class on that attribute and treat each
+    # value as a separate class. This ensures that we meet the rule
+    # exactly (adding extra phantoms as necessary). This is useful for
+    # things like needing all of the students in groups to be in the
+    # same recitation section.
+    if dek_rules[0]['name'] == 'aggregate':
+        attribute = dek_rules[0]['attribute']
+        # Turn back into a list to make sure ordering is preserved when we use
+        # this in multiple places
+        split_values = list(set(s[attribute] for s in students))
+        subclasses = [[s for s in students if s[attribute] == value]
+                      for value in split_values]
+        dek_rules = dek_rules[1:]
+    else:
+        subclasses = [students]
+        split_values = [None]
 
-    balance_rules = filter(lambda x: isinstance(x, Balance), rules)
-
-    groups = make_initial_groups(course, balance_rules)
-
-    # Add a rule to distribute phantoms to avoid having more than one phantom
-    # per group, put it first so that it is highest priority
-    # we have to add this after the phantoms are created by
-    # group.make_initial_groups so that it can see the phantoms
-    rules = [Distribute(identifier, course, 'phantom')] + rules
-
-    suceeded = apply_rules_list(rules, groups, course.students)
-
-    groups.sort(key = attrgetter('group_number'))
-
-
-    def failures(r):
-        return sum(1- r.check(g) for g in groups)
-
-    if failures(rules[0]) !=  0:
-        raise UnevenGroups()
-
-    # now get rid of the phantoms so they don't affect the output
-    for group in groups:
-        group.students = [s for s in group.students if s.data[identifier] !=
-                          'phantom']
-
-    course.students = [s for s in course.students if s.data[identifier] != 'phantom']
-
-    ############################################################################
-    # Output
-    ############################################################################
+    subcourses = [Course(students, dek['group_size'], dek.get('uneven_size'))
+                  for students in subclasses]
 
     run_name = os.path.splitext(input_deck)[0]
 
@@ -101,41 +88,93 @@ def run(input_deck):
     def outfile(o):
         return open('{0}_{1}'.format(run_name,o),'w')
 
-    group_output(groups, outfile('groups.csv'), identifier)
-    group_output(groups, outfile('groups.txt'), identifier, sep = '\n')
-    student_full_output(course.students, identifier, outfile('classlist.csv'))
+    for course, split in zip(subcourses, split_values):
+        rules = [make_rule(r, course) for r in dek_rules]
+
+        balance_rules = filter(lambda x: isinstance(x, Balance), rules)
+
+        groups = make_initial_groups(course, balance_rules)
+        def failures(r):
+            return sum(1- r.check(g) for g in groups)
+
+
+
+        # Add a rule to distribute phantoms to avoid having more than one phantom
+        # per group, put it first so that it is highest priority
+        # we have to add this after the phantoms are created by
+        # group.make_initial_groups so that it can see the phantoms
+        rules = [Distribute(identifier, course, 'phantom')] + rules
+
+        suceeded = apply_rules_list(rules, groups, course.students)
+
+        groups.sort(key = group_sort_key)
+
+
+        if failures(rules[0]) !=  0:
+            raise UnevenGroups()
+
+        # now get rid of the phantoms so they don't affect the output
+        for group in groups:
+            group.students = [s for s in group.students if s.data[identifier] !=
+                              'phantom']
+
+        course.students = [s for s in course.students if s.data[identifier] != 'phantom']
+        if split:
+            for group in groups:
+                group.group_number = "{} {}".format(split, group.group_number)
+            split_tag = "_{}".format(split)
+        else:
+            split_tag = ""
+
+        ########################################################################
+        # Output
+        ########################################################################
+
+        group_output(groups, outfile('groups{}.csv'.format(split_tag)), identifier)
+        group_output(groups, outfile('groups{}.txt'.format(split_tag)), identifier, sep = '\n')
+        statistics(rules, groups, students, balance_rules, input_deck, dek['classlist'], outfile('statistics{}.txt'.format(split_tag)))
+
+    students = sorted(students, key=group_sort_key)
+
+    student_full_output(students, identifier, outfile('classlist.csv'))
     student_augmented_output(students, rules, outfile('details.csv'))
 
 
-    report = outfile('statistics.txt')
+    os.chdir('..')
 
-    report.write('Ran GroupEng on: {0} with students from {1}\n\n'.format(
-            input_deck, dek['classlist']))
+    return suceeded, outdir
 
-    report.write('Made {0} groups\n\n'.format(len(groups)))
+def statistics(rules, groups, students, balance_rules, input_deck_name, classlist, outf):
+    def failures(r):
+        return sum(1- r.check(g) for g in groups)
+
+    outf.write('Ran GroupEng on: {0} with students from {1}\n\n'.format(
+            input_deck_name, classlist))
+
+    outf.write('Made {0} groups\n\n'.format(len(groups)))
 
     for r in rules[1:]:
         n_fail = failures(r)
         if isinstance(r, Balance):
             group_means = sorted([mean(g, r.get_strength) for g in groups])
             attr = r.attribute
-            report.write('{0} groups failed:'.format(n_fail))
-            report.write('{0}: '.format(r))
-            report.write('Class {0} Mean: {1:3.2f}, '.format(
+            outf.write('{0} groups failed:'.format(n_fail))
+            outf.write('{0}: '.format(r))
+            outf.write('Class {0} Mean: {1:3.2f}, '.format(
                     attr, mean(students, r.get_strength)))
-            report.write('Class {0} Std Dev: {1:3.2f}, '.format(
+            outf.write('Class {0} Std Dev: {1:3.2f}, '.format(
                         attr, std(students, r.get_strength)))
-            report.write('Std Dev of Group {0} Means: {1:3.2f}'.format(
+            outf.write('Std Dev of Group {0} Means: {1:3.2f}'.format(
                     attr, std(group_means)))
-            report.write('\n\n')
+            outf.write('\n\n')
         else:
-            report.write('{0} groups failed: {1}\n\n'.format(n_fail, r))
+            outf.write('{0} groups failed: {1}\n\n'.format(n_fail, r))
 
-    report.write('Group Summaries\n')
-    report.write('---------------\n')
+    outf.write('Group Summaries\n')
+    outf.write('---------------\n')
 
     for g in groups:
-        report.write('Group {0}: '.format(g.group_number))
+        outf.write('Group {0}: '.format(g.group_number))
         items = []
         for r in balance_rules:
             items.append('<{0} Mean: {1:3.2f}>'.format(
@@ -143,17 +182,19 @@ def run(input_deck):
         for r in rules:
             if not r.check(g):
                 items.append('Failed {0}'.format(r))
-        report.write(', '.join(items))
-        report.write('\n')
+        outf.write(', '.join(items))
+        outf.write('\n')
 
-    report.write('\n')
+    outf.write('\n')
 
-    os.chdir('..')
-
-    return groups, suceeded, outdir
+def group_sort_key(g):
+    try:
+        s, n = g.group_number.split()
+        return s, int(n)
+    except AttributeError:
+        return g.group_number
 
 def group_output(groups, outf, identifier, sep = ', '):
-    groups.sort(key = lambda x: x.group_number)
     for g in groups:
         students = sorted(g.students, key = lambda x: x[identifier])
         outf.write('Group {0}{1}{2}\n'.format(g.group_number, sep,
@@ -176,7 +217,6 @@ def student_augmented_output(students, rules, outf):
     outf.write('\n')
     group_number = 1
     num_student_headers = len(students[0].headers)
-    students = sorted(students, key=attrgetter('group_number'))
     for i, s in enumerate(students):
         # write out a summary of the previous group if we have gone to the next
         # group
