@@ -32,6 +32,7 @@ from . import utility
 from .group import Group
 
 tries = 20
+mixing = 20
 
 def count_items(f):
     return sum(1 for _ in f)
@@ -473,9 +474,12 @@ def apply_rule(rule, groups, students, try_number=0):
             rule.remedy(group, groups, students)
 
     if not all_happy(groups):
-        # TODO: add some random swap attempts not specific to a rule
-        # to allow shuffling between happy groups
         if try_number < tries:
+            # Do a few random swaps (not allowing new rule breaks),
+            # just to mix things up a bit and increase the chances of
+            # finding new solutions
+            for i in range(mixing):
+                find_target_and_swap(random.choice(students), groups)
             return apply_rule(rule, groups, students, try_number+1)
         else:
             return False
