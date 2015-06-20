@@ -141,31 +141,13 @@ def make_initial_groups(course, balance_rules):
     # looking
     min_strengths = strengths(min(course.students, key=strengths))
 
-    # fill up to an integer multiple of group_size with phantom students
-    # phantom students have None's as values for most fields, this
-    # should mean they never get treated as meeting any attribute
-    # requirement
-    data = dict([(key, None) for key in course.students[0].data.keys()])
     # Treat phantoms as as weak as the weakest student (some students
     # may be worse than not having no one, but ...)
-    for i, rule in enumerate(balance_rules):
-        data[rule.attribute] = min_strengths[i]
     identifier = course.students[0].identifier
-    data[identifier] = 'phantom'
-    def phantom():
-        return student.Student(data, identifier=identifier, headers =
-                               course.students[0].headers)
-
-    if course.uneven_size == '-':
-        n_phantoms = course.group_size - len(course.students) % course.group_size
-    elif course.uneven_size == '+': # fail high (make some groups with an extra person)
-        n_phantoms = (course.n_groups * course.group_size -
-                      len(course.students))
-    elif course.uneven_size == '=':
-        n_phantoms = 0
-
-    course.students = course.students + [phantom() for i in
-                                                 range(n_phantoms)]
+    for student in course.students:
+        if student[identifier] == 'phantom':
+            for i, rule in enumerate(balance_rules):
+                student.data[rule.attribute] = min_strengths[i]
 
     if len(course.students) != course.group_size * course.n_groups:
         raise InternalError("Students + Phantoms not divisible by groups")

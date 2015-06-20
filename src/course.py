@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
+from .student import Student
+
 class Course(object):
     def __init__(self, students, group_size='3+', uneven_size=None):
         self.students = students
@@ -52,8 +54,16 @@ class Course(object):
         else:
             self.uneven_size = '='
 
-        if self.n_groups * self.group_size < len(students):
+        if (self.n_groups * self.group_size) < len(students):
             self.n_groups += 1
 
-        # TODO: should we add phantoms here?  We can set their strengths to
-        # None, then give them values later.
+        if self.uneven_size != '=':
+            phantoms_needed = self.group_size * self.n_groups - len(self.students)
+            def make_phantom():
+                data = dict([(key, None) for key in self.students[0].data.keys()])
+                identifier = self.students[0].identifier
+                data[identifier] = 'phantom'
+                return Student(data, identifier=identifier, headers =
+                               self.students[0].headers)
+
+            self.students += [make_phantom() for i in range(phantoms_needed)]

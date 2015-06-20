@@ -26,7 +26,7 @@ def mean(l, key = lambda x: x):
 def std(l, key = lambda x: x):
     if hasattr(l, 'students'):
         l = l.students
-    l = [x for x in l if not hasattr(x,'key') or x.key is not None]
+    l = [x for x in l if key(x) is not None]
     v = [key(x) for x in l]
     m = mean(v)
     total = 0
