@@ -42,6 +42,12 @@ class Course(object):
             else:
                 raise Exception("{0} cannot be interpreted as a group size".format(group_size))
 
+        # We intentionally choose the number of groups before possibly changing
+        # the group size to account for uneven size. In the case of uneven +, we
+        # still want most of the groups to have the standard number of students,
+        # setting the group size here will have the effect of having extra
+        # groups and extra phanoms, and having only a few groups with an extra
+        # student, instead of having n+ basically mimic (n+1)-.
         self.n_groups = len(students) // self.group_size
 
         #TODO: check carefully that things are handled correctly in the case
