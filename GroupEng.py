@@ -30,7 +30,7 @@ import os
 from src import controller
 
 if len(sys.argv) > 1:
-    debug = True
+    debug = False
     if debug:
         status, outdir = controller.run(sys.argv[1])
         if not status:
