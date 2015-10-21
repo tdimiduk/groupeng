@@ -17,6 +17,7 @@
 
 import time
 import os
+import csv
 from operator import attrgetter
 from .group import make_initial_groups
 from .utility import mean, std
@@ -203,34 +204,36 @@ def group_output(groups, outf, identifier, sep = ', '):
                                                        students])))
 
 def student_full_output(students, identifier, outf):
-    outf.write(', '.join(students[0].headers)+'\n')
+    writer = csv.writer(outf)
+    writer.writerow((students[0].headers))
     for s in students:
-        outf.write(s.full_record()+'\n')
+        writer.writerow(s.full_record())
 
 
 def student_augmented_output(students, rules, outf):
-    outf.write(', '.join(students[0].headers))
     add_headers = ['']
     balance_rules = [r for r in rules if r.name == 'Balance']
     add_headers += ["group {0} mean".format(r.attribute) for r in balance_rules]
     add_headers += ["Rules Broken"]
-    outf.write(', '.join(add_headers))
-    outf.write('\n')
-    group_number = 1
+    headers = students[0].headers
+
+    writer = csv.writer(outf)
+    writer.writerow(headers+add_headers)
+
+    group_number = students[0].group_number
     num_student_headers = len(students[0].headers)
     for i, s in enumerate(students):
         # write out a summary of the previous group if we have gone to the next
         # group
         if s.group_number != group_number:
             group = students[i-1].group
-            outf.write("summary")
-            outf.write(', ' * num_student_headers)
-            summary = []
+            summary = ['summary']
+            summary += [''] * num_student_headers
             summary += [str(mean(group.students, r.get_strength)) for r in balance_rules]
             summary += ["{}: {}".format(r.name, r.attribute) for r in rules if
                         not r.check(group.students)]
-            outf.write(', '.join(summary))
-            outf.write('\n\n')
+            writer.writerow(summary)
+            writer.writerow([])
             group_number = s.group_number
 
-        outf.write(s.full_record()+'\n')
+        writer.writerow(s.full_record())
