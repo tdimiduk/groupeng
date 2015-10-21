@@ -30,7 +30,10 @@ import os
 from src import controller
 
 if len(sys.argv) > 1:
-    debug = False
+    try:
+        debug = os.environ['DEBUG'].lower() == 'true'
+    except KeyError:
+        debug = False
     if debug:
         status, outdir = controller.run(sys.argv[1])
         if not status:

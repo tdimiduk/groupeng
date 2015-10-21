@@ -73,3 +73,21 @@ class Course(object):
                                self.students[0].headers)
 
             self.students += [make_phantom() for i in range(phantoms_needed)]
+
+    def attr_values(self, attr):
+        return remove_none(set(s[attr] for s in self.students))
+
+def remove_none(s):
+    try:
+        s.remove(None)
+    except KeyError:
+        pass
+    return s
+
+class SubCourse(Course):
+    def __init__(self, students, all_students, group_size='3+', uneven_size=None):
+        self.all_students = all_students
+        super(SubCourse, self).__init__(students, group_size, uneven_size)
+
+    def attr_values(self, attr):
+        return remove_none(set(s[attr] for s in self.all_students))

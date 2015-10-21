@@ -22,7 +22,7 @@ from .group import make_initial_groups
 from .utility import mean, std
 from .rule import make_rule, apply_rules_list, Balance, Distribute
 from .student import load_classlist
-from .course import Course
+from .course import Course, SubCourse
 from . import input_parser
 
 
@@ -69,13 +69,14 @@ def run(input_deck):
         split_values = list(set(s[attribute] for s in students))
         subclasses = [[s for s in students if s[attribute] == value]
                       for value in split_values]
+        subcourses = [SubCourse(sc, students, dek['group_size'], dek.get('uneven_size')) for sc in subclasses]
+
         dek_rules = dek_rules[1:]
     else:
-        subclasses = [students]
+        subcourses = [Course(students, dek['group_size'],
+                             dek.get('uneven_size'))]
         split_values = [None]
 
-    subcourses = [Course(students, dek['group_size'], dek.get('uneven_size'))
-                  for students in subclasses]
 
     run_name = os.path.splitext(input_deck)[0]
 
@@ -189,7 +190,7 @@ def statistics(rules, groups, students, balance_rules, input_deck_name, classlis
 
 def group_sort_key(g):
     try:
-        s, n = g.group_number.split()
+        s, n = g.group_number.rsplit(None, 1)
         return s, int(n)
     except AttributeError:
         return g.group_number

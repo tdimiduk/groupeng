@@ -96,13 +96,7 @@ class Rule(object):
             raise AttributeNotFound(self.name, attribute,
                                     course.students[0].headers)
 
-        all_values = set([s[attribute] for s in course.students])
-        try:
-            all_values.remove(None)
-        except KeyError:
-            # ignore error if None is not present, we just want to make
-            # sure it isn't
-            pass
+        all_values = course.attr_values(attribute)
 
         try:
             if values.lower() == 'all':
@@ -111,6 +105,8 @@ class Rule(object):
             # Attribute error probably means values[0] is not a string, that is
             # fine, just pretend we failed the if
             pass
+
+
 
         try:
             values.__iter__()
