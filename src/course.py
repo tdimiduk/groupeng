@@ -18,11 +18,35 @@
 from .student import Student
 
 class Course(object):
-    def __init__(self, students, group_size='3+', uneven_size=None):
+    def __init__(self, students, group_size='3+', uneven_size=None, number_of_groups=None):
         self.students = students
         self.students_no_phantoms = list(students)
 
-        # parse group size
+        if number_of_groups is not None:
+            if group_size is not None:
+                print("Fixed number of groups specified, ignoring specified group size")
+            self.n_groups = number_of_groups
+            self.group_size = len(students) // self.n_groups
+            if self.group_size * self.n_groups < len(students):
+                self.group_size += 1
+                self.uneven_size = '-'
+            else:
+                self.uneven_size = '='
+        else:
+            self._parse_group_size(group_size)
+
+        if self.uneven_size != '=':
+            phantoms_needed = self.group_size * self.n_groups - len(self.students)
+            def make_phantom():
+                data = dict([(key, None) for key in self.students[0].data.keys()])
+                identifier = self.students[0].identifier
+                data[identifier] = 'phantom'
+                return Student(data, identifier=identifier, headers =
+                               self.students[0].headers)
+
+            self.students += [make_phantom() for i in range(phantoms_needed)]
+
+    def _parse_group_size(self, group_size):
         try:
             self.group_size = int(group_size)
             if uneven_size.lower() == 'high':
@@ -48,11 +72,11 @@ class Course(object):
         # setting the group size here will have the effect of having extra
         # groups and extra phanoms, and having only a few groups with an extra
         # student, instead of having n+ basically mimic (n+1)-.
-        self.n_groups = len(students) // self.group_size
+        self.n_groups = len(self.students) // self.group_size
 
         #TODO: check carefully that things are handled correctly in the case
         #where len(students) divides evenly into increased group size.
-        remainder = len(students) % self.group_size
+        remainder = len(self.students) % self.group_size
         if remainder:
             if self.uneven_size == '+':
                 # add 1 to group size so most groups can have a phantom
@@ -60,19 +84,9 @@ class Course(object):
         else:
             self.uneven_size = '='
 
-        if (self.n_groups * self.group_size) < len(students):
+        if (self.n_groups * self.group_size) < len(self.students):
             self.n_groups += 1
 
-        if self.uneven_size != '=':
-            phantoms_needed = self.group_size * self.n_groups - len(self.students)
-            def make_phantom():
-                data = dict([(key, None) for key in self.students[0].data.keys()])
-                identifier = self.students[0].identifier
-                data[identifier] = 'phantom'
-                return Student(data, identifier=identifier, headers =
-                               self.students[0].headers)
-
-            self.students += [make_phantom() for i in range(phantoms_needed)]
 
     def attr_values(self, attr):
         return remove_none(set(s[attr] for s in self.students))

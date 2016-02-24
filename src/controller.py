@@ -70,12 +70,13 @@ def run(input_deck):
         split_values = list(set(s[attribute] for s in students))
         subclasses = [[s for s in students if s[attribute] == value]
                       for value in split_values]
-        subcourses = [SubCourse(sc, students, dek['group_size'], dek.get('uneven_size')) for sc in subclasses]
+        subcourses = [SubCourse(sc, students, dek.get('group_size'), dek.get('uneven_size'),
+                                dek.get['number_of_groups']) for sc in subclasses]
 
         dek_rules = dek_rules[1:]
     else:
-        subcourses = [Course(students, dek['group_size'],
-                             dek.get('uneven_size'))]
+        subcourses = [Course(students, dek.get('group_size'),
+                             dek.get('uneven_size'), dek.get('number_of_groups'))]
         split_values = [None]
 
 

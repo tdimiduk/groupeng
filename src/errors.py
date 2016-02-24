@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
-class InputError(Exception):
+class GroupEngFileError(Exception):
     def __init__(self, line, lineno, inf):
-        self.line
-        self.lineno
-        self.inf
+        self.line = line
+        self.lineno = lineno
+        self.inf = inf
     def __str__(self):
         return "Can't understand: {0} at line {1} of {2}".format(
             self.line, self.lineno, self.inf)

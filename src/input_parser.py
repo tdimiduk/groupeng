@@ -17,7 +17,7 @@
 
 import re
 from .utility import numberize
-from .errors import InputError
+from .errors import GroupEngFileError
 
 def read_input(infile):
     if not hasattr(infile, 'readlines'):
@@ -40,6 +40,8 @@ def read_input(infile):
             dek['group_size'] = split_key(line)[1]
         elif re.match('student_identifier', line) or re.match('[Ii][Dd]', line):
             dek['student_identifier'] = split_key(line)[1]
+        elif re.match('number_of_groups', line):
+            dek['number_of_groups'] = int(split_key(line)[1])
         elif line[0] == '-':
             line = line[1:]
             # read a rule
@@ -62,7 +64,7 @@ def read_input(infile):
                 rule[key] = vals
             rules.append(rule)
         else:
-            raise InputError(line, i+1, infile.name)
+            raise GroupEngFileError(line, i+1, infile.name)
 
         i += 1
 
