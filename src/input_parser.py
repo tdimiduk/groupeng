@@ -61,6 +61,8 @@ def read_input(infile):
                     if len(vs) == 1:
                         vs = vs[0]
                     vals.append(numberize(vs))
+                if len(vals) == 1:
+                    vals = vals[0]
                 rule[key] = vals
             rules.append(rule)
         else:
