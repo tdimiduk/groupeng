@@ -51,8 +51,14 @@ else:
         from tkinter import *
     except ImportError:
         from Tkinter import *
-    from tkFileDialog import askopenfilename
-    from tkMessageBox import showerror, showinfo
+    try:
+        from tkinter.filedialog import askopenfilename
+    except ImportError:
+        from tkFileDialog import askopenfilename
+    try:
+        from tkinter.messagebox import showerror, showinfo
+    except ImportError:
+        from tkMessageBox import showerror, showinfo
 
     path = askopenfilename()
     d, f = os.path.split(path)
