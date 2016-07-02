@@ -47,7 +47,10 @@ if len(sys.argv) > 1:
             print(e)
 else:
     # import gui stuff only if we are going to use it
-    from Tkinter import *
+    try:
+        from tkinter import *
+    except ImportError:
+        from Tkinter import *
     from tkFileDialog import askopenfilename
     from tkMessageBox import showerror, showinfo
 
