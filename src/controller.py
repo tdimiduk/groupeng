@@ -71,7 +71,7 @@ def run(input_deck):
         subclasses = [[s for s in students if s[attribute] == value]
                       for value in split_values]
         subcourses = [SubCourse(sc, students, dek.get('group_size'), dek.get('uneven_size'),
-                                dek.get['number_of_groups']) for sc in subclasses]
+                                dek.get('number_of_groups')) for sc in subclasses]
 
         dek_rules = dek_rules[1:]
     else:

@@ -99,9 +99,9 @@ def remove_none(s):
     return s
 
 class SubCourse(Course):
-    def __init__(self, students, all_students, group_size='3+', uneven_size=None):
+    def __init__(self, students, all_students, group_size='3+', uneven_size=None, number_of_groups=None):
         self.all_students = all_students
-        super(SubCourse, self).__init__(students, group_size, uneven_size)
+        super(SubCourse, self).__init__(students, group_size, uneven_size, number_of_groups)
 
     def attr_values(self, attr):
         return remove_none(set(s[attr] for s in self.all_students))
