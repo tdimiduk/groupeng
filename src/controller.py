@@ -27,6 +27,8 @@ from .course import Course, SubCourse
 from . import input_parser
 
 
+import logging
+log = logging.getLogger('log')
 
 class InputDeckError(Exception):
     def __init__(self, e):
@@ -52,8 +54,10 @@ def run(input_deck):
     Output files determined by Input deck
     """
     dek = input_parser.read_input(input_deck)
+    log.debug('read input deck')
 
     students = load_classlist(dek['classlist'], dek.get('student_identifier'))
+    log.debug('read class list')
     identifier = students[0].identifier
     dek_rules = dek['rules']
 
@@ -74,10 +78,12 @@ def run(input_deck):
                                 dek.get('number_of_groups')) for sc in subclasses]
 
         dek_rules = dek_rules[1:]
+        log.debug('initialized course with hard aggregater')
     else:
         subcourses = [Course(students, dek.get('group_size'),
                              dek.get('uneven_size'), dek.get('number_of_groups'))]
         split_values = [None]
+        log.debug("Initialized Course")
 
 
     run_name = os.path.splitext(input_deck)[0]
@@ -86,6 +92,7 @@ def run(input_deck):
                                      time.strftime('%Y-%m-%d_%H-%M-%S'))
 
     os.mkdir(outdir)
+    log.debug('Made output directory')
     os.chdir(outdir)
 
     def outfile(o):
@@ -93,10 +100,12 @@ def run(input_deck):
 
     for course, split in zip(subcourses, split_values):
         rules = [make_rule(r, course) for r in dek_rules]
+        log.debug("Made rules")
 
         balance_rules = filter(lambda x: isinstance(x, Balance), rules)
 
         groups = make_initial_groups(course, balance_rules)
+        log.debug("Made initial groups")
         def failures(r):
             return sum(1- r.check(g) for g in groups)
 
@@ -109,6 +118,7 @@ def run(input_deck):
         rules = [Distribute(identifier, course, 'phantom')] + rules
 
         suceeded = apply_rules_list(rules, groups, course.students)
+        log.debug("applied rules")
 
         groups.sort(key = group_sort_key)
 
@@ -122,6 +132,7 @@ def run(input_deck):
                               'phantom']
 
         course.students = [s for s in course.students if s.data[identifier] != 'phantom']
+        log.debug("removed phantoms")
         if split:
             for group in groups:
                 group.group_number = "{} {}".format(split, group.group_number)
@@ -141,7 +152,7 @@ def run(input_deck):
 
     student_full_output(students, identifier, outfile('classlist.csv'))
     student_augmented_output(students, rules, outfile('details.csv'))
-
+    log.debug("wrote output")
 
     os.chdir('..')
 

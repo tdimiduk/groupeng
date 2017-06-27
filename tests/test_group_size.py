@@ -1,8 +1,13 @@
 import sys
-sys.path.append('../')
-sys.path.append('../src')
+import os
 
 from src import controller
 
-controller.run('test_group_size.groupeng')
+path = os.path.abspath(__file__)
+print(path)
+root = os.path.split(path)[0]
+gf = os.path.join(root, 'test_group_size.groupeng')
+print(gf)
+
+controller.run(gf)
 

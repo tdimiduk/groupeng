@@ -28,8 +28,16 @@ import sys
 import os.path
 import os
 from src import controller
+import logging
+
+log = logging.getLogger('log')
+log.setLevel(logging.DEBUG)
+fh = logging.FileHandler('GroupEng.log')
+fh.setLevel(logging.DEBUG)
+log.addHandler(fh)
 
 if len(sys.argv) > 1:
+    log.debug('In command line version')
     try:
         debug = os.environ['DEBUG'].lower() == 'true'
     except KeyError:
@@ -46,6 +54,7 @@ if len(sys.argv) > 1:
         except Exception as e:
             print(e)
 else:
+    log.debug("In gui version")
     # import gui stuff only if we are going to use it
     try:
         from tkinter import *
@@ -59,12 +68,16 @@ else:
         from tkinter.messagebox import showerror, showinfo
     except ImportError:
         from tkMessageBox import showerror, showinfo
+    log.debug("inported gui")
 
     path = askopenfilename()
+    log.debug("Got file path: "+path)
     d, f = os.path.split(path)
     os.chdir(d)
+    log.debug("Changed directory to: "+d)
     try:
         status, outdir = controller.run(f)
+        log.debug('ran groupeng, results are in: '+outdir)
     except Exception as e:
         showerror('GroupEng Error', '{0}'.format(e))
 
