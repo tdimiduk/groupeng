@@ -23,3 +23,7 @@ class GroupEngFileError(Exception):
     def __str__(self):
         return "Can't understand: {0} at line {1} of {2}".format(
             self.line, self.lineno, self.inf)
+
+class EmptyMean(Exception):
+    def __str__(self):
+        return "Tried to take the mean of a set of zero items"

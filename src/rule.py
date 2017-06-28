@@ -30,6 +30,7 @@ from .student import attribute_match
 from .group import valid_swap, swap
 from . import utility
 from .group import Group
+from .errors import EmptyMean
 
 tries = 20
 mixing = 20
@@ -248,10 +249,20 @@ class Balance(Rule):
     def __str__(self):
         return "<Balance : {0} : tol {1}>".format(self.mean, self.tol)
     def _check(self, students):
-        return abs(utility.mean(students, self.get_strength) - self.mean) < self.tol
+        try: 
+            return abs(utility.mean(students, self.get_strength) - self.mean) < self.tol
+        # If somehow you don't have a strength for any of the students,
+        # consider the group to be failing the rule
+        except EmptyMean:
+            return False
     def permissable_change(self, old, new):
-        b = (abs(utility.mean(old, self.get_strength) - self.mean) >
-             abs(utility.mean(new, self.get_strength) - self.mean))
+        try: 
+            b = (abs(utility.mean(old, self.get_strength) - self.mean) >
+                 abs(utility.mean(new, self.get_strength) - self.mean))
+        except EmptyMean:
+            # If somehow one of the groups has nobody with a strength,
+            # allow swapping with that group
+            return True
         if self.check(new) and not b:
             # return 2 here so that caller can distinquish if they
             # care that we have "worsened" but are still within
@@ -263,11 +274,19 @@ class Balance(Rule):
     def _fix(self, student, groups, students):
         group = student.group
         if utility.mean(group, self.get_strength) - self.mean > 0:
-            test = lambda x: utility.mean(x, self.get_strength) < self.mean
+            def test(x):
+                try:
+                    return utility.mean(x, self.get_strength) < self.mean
+                except EmptyMean:
+                    return True
         else:
-            test = lambda x: utility.mean(x, self.get_strength) > self.mean
+            def test(x):
+                try:
+                    return utility.mean(x, self.get_strength) > self.mean
+                except EmptyMean:
+                    return True
 
-        targets = filter(lambda g: test(g), groups)
+        targets = [g for g in groups if test(g)]
 
         short_list = filter(lambda g: abs(utility.mean(g,
                                                        self.get_strength) -
