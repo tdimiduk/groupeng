@@ -57,10 +57,7 @@ def read_input(infile):
                 val = tuple([v.strip() for v in val.split(',')])
                 vals = []
                 for v in val:
-                    vs = tuple([numberize(vi.strip()) for vi in v.split('=')])
-                    if len(vs) == 1:
-                        vs = vs[0]
-                    vals.append(numberize(vs))
+                    vals.append(union_group(v))
                 if len(vals) == 1:
                     vals = vals[0]
                 rule[key] = vals
@@ -76,3 +73,16 @@ def read_input(infile):
 
 def split_key(st):
     return [s.strip() for s in st.split(':')]
+
+def union_group(item):
+    items = [i.strip() for i in item.split('=')]
+    if items[0][0] == '(':
+        items[0] = items[0][1:]
+    if items[-1][-1] == ')':
+        items[-1] = items[-1][:-1]
+
+    items = tuple([numberize(i) for i in items])
+    if len(items) == 1:
+        items = items[0]
+
+    return items

@@ -8,7 +8,7 @@ group_size : 4+
   values : M
 
 - cluster : Ethnicity
-  values : B = H
+  values : (B = H)
 
 - aggregate : Project choice
 
