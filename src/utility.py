@@ -16,14 +16,14 @@
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import errors
+from .errors import EmptyMean
 
 def mean(l, key = lambda x: x):
     if hasattr(l, 'students'):
         l = l.students
     l = [key(x) for x in l if key(x) is not None]
     if len(l) == 0:
-        raise errors.EmptyMean()
+        raise EmptyMean()
     return sum(l)/len(l)
 
 def std(l, key = lambda x: x):
