@@ -517,24 +517,16 @@ class RuleNotImplemented(Exception):
         return "Sorry, we don't have a rule named: {0}\ndo you have a typo in \
 your input deck?".format(self.rule)
 
-class InvalidRuleSpecification(Exception):
-    def __init__(self, spec):
-        self.spec = spec
-    def __str__(self):
-        if _all_rules.has_key(self.spec['type']):
-            return "{0} rule looks like it is specified in the old format, \
-please update your input deck".format(self.spec['type'])
-        return "Could not define rule with: {0}".format(self.spec)
-
 _all_rules = {}
 for rule in [Aggregate, Distribute, Cluster, Balance]:
     _all_rules[rule.name.lower()] = rule
 
 def make_rule(input_spec, course):
-    try:
-        r = _all_rules[input_spec['name']]
-    except KeyError:
-        InvalidRuleSpecification(input_spec)
+    rule_name = input_spec['name'].lower()
+    if rule_name not in _all_rules:
+        raise RuleNotImplemented(rule_name)
+    r = _all_rules[rule_name]
+
 
     attribute = input_spec['attribute']
     kwargs = input_spec.copy()
