@@ -5,7 +5,7 @@ student_identifier : ID
 group_size : 4+
 
 - cluster : Gender
-  values : M
+  values : F
 
 - cluster : Ethnicity
   values : (B = H)

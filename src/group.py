@@ -64,6 +64,9 @@ class Group(object):
                 return False
         return True
 
+    def satisfies_rule(self, rule):
+        return rule.check(self)
+
     @property
     def size(self):
         return len(self.students)

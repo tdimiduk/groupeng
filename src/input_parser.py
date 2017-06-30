@@ -42,6 +42,8 @@ def read_input(infile):
             dek['student_identifier'] = split_key(line)[1]
         elif re.match('number_of_groups', line):
             dek['number_of_groups'] = int(split_key(line)[1])
+        elif re.match('tries', line):
+            dek['tries'] = int(split_key(line)[1])
         elif line[0] == '-':
             line = line[1:]
             # read a rule

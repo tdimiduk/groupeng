@@ -22,6 +22,7 @@ Grouping rules.  Definitions and functions for fixing groups.
 """
 
 
+import logging
 import random
 import re
 from collections import Counter
@@ -32,8 +33,7 @@ from . import utility
 from .group import Group
 from .errors import EmptyMean
 
-tries = 20
-mixing = 20
+log = logging.getLogger('log')
 
 def count_items(f):
     return sum(1 for _ in f)
@@ -476,7 +476,14 @@ def all_happy(groups):
             return False
     return True
 
-def apply_rule(rule, groups, students, try_number=0):
+def all_satisfy_rule(groups, rule):
+    for group in groups:
+        if not group.satisfies_rule(rule):
+            print([s[rule.attribute] for s in group.students])
+            return False
+    return True
+
+def apply_rule(rule, groups, students, tries, mixing, try_number=0):
     if isinstance(rule, Aggregate):
         rule.apply(groups, students)
     else:
@@ -485,17 +492,18 @@ def apply_rule(rule, groups, students, try_number=0):
         # add rule checks and will not add the rule twice, so we can just do
         # this
         group.add_rule(rule)
-        if not group.happy:
+        if not group.satisfies_rule(rule):
             rule.remedy(group, groups, students)
 
-    if not all_happy(groups):
+    if not all_satisfy_rule(groups, rule):
         if try_number < tries:
+            log.debug("Try {}/{} retrying for rule {}".format(try_number, tries, rule))
             # Do a few random swaps (not allowing new rule breaks),
             # just to mix things up a bit and increase the chances of
             # finding new solutions
             for i in range(mixing):
                 find_target_and_swap(random.choice(students), groups)
-            return apply_rule(rule, groups, students, try_number+1)
+            return apply_rule(rule, groups, students, try_number+1, tries, mixing)
         else:
             return False
     else:
@@ -503,10 +511,10 @@ def apply_rule(rule, groups, students, try_number=0):
 
 
 
-def apply_rules_list(rules, groups, students):
+def apply_rules_list(rules, groups, students, tries, mixing=20):
     success = True
     for rule in rules:
-        success = apply_rule(rule, groups, students) and success
+        success = apply_rule(rule, groups, students, tries, mixing) and success
     return success
 
 

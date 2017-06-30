@@ -60,6 +60,10 @@ def run(input_deck):
     log.debug('read class list')
     identifier = students[0].identifier
     dek_rules = dek['rules']
+    tries = 5
+    if 'tries' in dek:
+        tries = dek['tries']
+    log.debug('Allowing {} tries to get rules to work'.format(tries))
 
     log.debug("Using Rules: "+str(dek_rules))
 
@@ -126,7 +130,7 @@ def run(input_deck):
         # group.make_initial_groups so that it can see the phantoms
         rules = [Distribute(identifier, course, 'phantom')] + rules
 
-        suceeded = apply_rules_list(rules, groups, course.students)
+        suceeded = apply_rules_list(rules, groups, course.students, tries=tries)
         log.debug("applied rules")
 
         groups.sort(key = group_sort_key)
