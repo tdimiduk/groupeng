@@ -131,7 +131,7 @@ def swap(s1, s2):
     group2.add(s1)
 
 
-def make_initial_groups(course, balance_rules):
+def make_initial_groups(course, balance_rules, group_number_offset=0):
 
     def strengths(s):
         return [r.get_strength(s) for r in balance_rules]
@@ -165,7 +165,7 @@ def make_initial_groups(course, balance_rules):
     i = 0
     while i < len(mtiles[0]):
         # grab one student from each mtile
-        g = Group([mtile[i] for mtile in mtiles], i+1)
+        g = Group([mtile[i] for mtile in mtiles], i+1+group_number_offset)
         groups.append(g)
         i += 1
 

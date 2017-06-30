@@ -105,13 +105,15 @@ def run(input_deck):
     def outfile(o):
         return open('{0}_{1}'.format(run_name,o),'w')
 
+    group_number_offset = 0
     for course, split in zip(subcourses, split_values):
         rules = [make_rule(r, course) for r in dek_rules]
         log.debug("Made rules")
 
         balance_rules = filter(lambda x: isinstance(x, Balance), rules)
 
-        groups = make_initial_groups(course, balance_rules)
+        groups = make_initial_groups(course, balance_rules, group_number_offset)
+        group_number_offset += course.n_groups
         log.debug("Made initial groups")
         def failures(r):
             return sum(1- r.check(g) for g in groups)
@@ -141,8 +143,6 @@ def run(input_deck):
         course.students = [s for s in course.students if s.data[identifier] != 'phantom']
         log.debug("removed phantoms")
         if split:
-            for group in groups:
-                group.group_number = "{} {}".format(split, group.group_number)
             split_tag = "_{}".format(split)
         else:
             split_tag = ""
@@ -155,7 +155,9 @@ def run(input_deck):
         group_output(groups, outfile('groups{}.txt'.format(split_tag)), identifier, sep = '\n')
         statistics(rules, groups, students, balance_rules, input_deck, dek['classlist'], outfile('statistics{}.txt'.format(split_tag)))
 
+    print([s.group_number for s in students])
     students = sorted(students, key=group_sort_key)
+    print([s.group_number for s in students])
 
     student_full_output(students, identifier, outfile('classlist.csv'))
     student_augmented_output(students, rules, outfile('details.csv'))
