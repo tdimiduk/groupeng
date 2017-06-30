@@ -89,7 +89,6 @@ def run(input_deck):
         log.debug('initialized course with hard aggregate')
     else:
         subcourses = [Course(students, *gs)]
-        split_values = [None]
         log.debug("Initialized Course")
 
 
@@ -106,7 +105,8 @@ def run(input_deck):
         return open('{0}_{1}'.format(run_name,o),'w')
 
     group_number_offset = 0
-    for course, split in zip(subcourses, split_values):
+    all_groups = []
+    for course in subcourses:
         rules = [make_rule(r, course) for r in dek_rules]
         log.debug("Made rules")
 
@@ -142,22 +142,17 @@ def run(input_deck):
 
         course.students = [s for s in course.students if s.data[identifier] != 'phantom']
         log.debug("removed phantoms")
-        if split:
-            split_tag = "_{}".format(split)
-        else:
-            split_tag = ""
 
-        ########################################################################
-        # Output
-        ########################################################################
+        all_groups = all_groups + groups
 
-        group_output(groups, outfile('groups{}.csv'.format(split_tag)), identifier)
-        group_output(groups, outfile('groups{}.txt'.format(split_tag)), identifier, sep = '\n')
-        statistics(rules, groups, students, balance_rules, input_deck, dek['classlist'], outfile('statistics{}.txt'.format(split_tag)))
-
-    print([s.group_number for s in students])
     students = sorted(students, key=group_sort_key)
-    print([s.group_number for s in students])
+
+    ########################################################################
+    # Output
+    ########################################################################
+    group_output(all_groups, outfile('groups.csv'), identifier)
+    group_output(all_groups, outfile('groups.txt'), identifier, sep = '\n')
+    statistics(rules, all_groups, students, balance_rules, input_deck, dek['classlist'], outfile('statistics.txt'))
 
     student_full_output(students, identifier, outfile('classlist.csv'))
     student_augmented_output(students, rules, outfile('details.csv'))
