@@ -46,7 +46,7 @@ def read_input(infile):
             line = line[1:]
             # read a rule
             rule = {}
-            rule['name'] = split_key(line)[0]
+            rule['name'] = split_key(line)[0].lower()
             rule['attribute'] = split_key(line)[1]
 
             # read extra arguments

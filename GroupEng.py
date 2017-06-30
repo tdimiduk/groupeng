@@ -32,7 +32,7 @@ import logging
 
 log = logging.getLogger('log')
 log.setLevel(logging.DEBUG)
-fh = logging.FileHandler('GroupEng.log')
+fh = logging.FileHandler('GroupEng.log', mode='w')
 fh.setLevel(logging.DEBUG)
 log.addHandler(fh)
 

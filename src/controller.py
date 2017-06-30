@@ -61,6 +61,8 @@ def run(input_deck):
     identifier = students[0].identifier
     dek_rules = dek['rules']
 
+    log.debug("Using Rules: "+str(dek_rules))
+
     # This adds support for a "Hard" aggregate. If your first rule is
     # aggregate, we split the class on that attribute and treat each
     # value as a separate class. This ensures that we meet the rule
@@ -78,7 +80,7 @@ def run(input_deck):
                                 dek.get('number_of_groups')) for sc in subclasses]
 
         dek_rules = dek_rules[1:]
-        log.debug('initialized course with hard aggregater')
+        log.debug('initialized course with hard aggregate')
     else:
         subcourses = [Course(students, dek.get('group_size'),
                              dek.get('uneven_size'), dek.get('number_of_groups'))]
