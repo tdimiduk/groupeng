@@ -23,7 +23,7 @@ from .group import make_initial_groups
 from .utility import mean, std
 from .rule import make_rule, apply_rules_list, Balance, Distribute
 from .student import load_classlist
-from .course import Course, SubCourse
+from .course import Course, SubCourse, determine_group_size
 from . import input_parser
 
 
@@ -69,6 +69,11 @@ def run(input_deck):
     # exactly (adding extra phantoms as necessary). This is useful for
     # things like needing all of the students in groups to be in the
     # same recitation section.
+
+    gs = determine_group_size(len(students), dek.get('group_size'),
+                              dek.get('uneven_size'),
+                              dek.get('number_of_groups'))
+    log.debug("Using: {} groups of size {} for {} students, uneven_size: {}".format(gs[-1], gs[0], len(students), gs[1]))
     if dek_rules[0]['name'] == 'aggregate':
         attribute = dek_rules[0]['attribute']
         # Turn back into a list to make sure ordering is preserved when we use
@@ -76,14 +81,14 @@ def run(input_deck):
         split_values = list(set(s[attribute] for s in students))
         subclasses = [[s for s in students if s[attribute] == value]
                       for value in split_values]
-        subcourses = [SubCourse(sc, students, dek.get('group_size'), dek.get('uneven_size'),
-                                dek.get('number_of_groups')) for sc in subclasses]
+        subcourses = [SubCourse(sc, students,
+                                *determine_group_size(len(sc), *gs[:-1]))
+                      for sc in subclasses]
 
         dek_rules = dek_rules[1:]
         log.debug('initialized course with hard aggregate')
     else:
-        subcourses = [Course(students, dek.get('group_size'),
-                             dek.get('uneven_size'), dek.get('number_of_groups'))]
+        subcourses = [Course(students, *gs)]
         split_values = [None]
         log.debug("Initialized Course")
 
