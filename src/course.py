@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with GroupEng.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division
+import math
+
 from .student import Student
 
 def sizer_from_dek(dek):
@@ -52,11 +55,11 @@ class GroupSizer:
                     raise Exception("{0} cannot be interpreted as a group size".format(group_size))
 
     def group_size(self, number_of_students):
-        n = number_of_students // self._group_size
+        if self._n_groups:
+            return math.ceil(number_of_students / self._n_groups)
 
-        if number_of_students % n:
-            if self._uneven_size == '+':
-                return self._group_size + 1
+        if (number_of_students % self._group_size) and (self._uneven_size == '+'):
+            return self._group_size + 1
 
         return self._group_size
 
@@ -83,64 +86,22 @@ class GroupSizer:
             self._uneven_size,
             self._n_groups)
 
+class SplitSizer:
+    def __init__(self, sizer, n_full_class):
+        self.sizer = sizer
+        self.n_full_class = n_full_class
 
-def determine_group_size(number_of_students, group_size='3+', uneven_size=None,
-                         n_groups=None):
-    if n_groups is not None:
-        if group_size is not None:
-            print("Fixed number of groups specified, ignoring specified group size")
-        n_groups = n_groups
-        group_size = number_of_students // n_groups
-        # TODO: Can this if ever fail?
-        if group_size * n_groups < number_of_students:
-            group_size += 1
-            uneven_size = '-'
+    def n_groups(self, number_of_students):
+        if self.sizer._n_groups:
+            return math.round(self._n_groups * (number_of_students/self.n_full_class))
         else:
-            uneven_size = '='
+            return self.sizer.n_groups(number_of_students)
 
-    else:
-        try:
-            group_size = int(group_size)
-            if uneven_size.lower() == 'high':
-                uneven_size = '+'
-            elif uneven_size.lower() == 'low':
-                uneven_size = '-'
-            else:
-                # no uneven_size specified, use default based on group size
-                if group_size < 4:
-                    uneven_size = '+'
-                else:
-                    uneven_size = '-'
-        except ValueError:
-            if group_size[-1] in '+-':
-                uneven_size = group_size[-1]
-                group_size = int(group_size[:-1])
-            else:
-                raise Exception("{0} cannot be interpreted as a group size".format(group_size))
+    def group_size(self, number_of_students):
+        if self.sizer._n_groups:
+            return math.ceil(number_of_students/self.n_groups(number_of_students))
 
-        # We intentionally choose the number of groups before possibly changing
-        # the group size to account for uneven size. In the case of uneven +, we
-        # still want most of the groups to have the standard number of students,
-        # setting the group size here will have the effect of having extra
-        # groups and extra phanoms, and having only a few groups with an extra
-        # student, instead of having n+ basically mimic (n+1)-.
-        n_groups = number_of_students // group_size
-
-        #TODO: check carefully that things are handled correctly in the case
-        #where len(students) divides evenly into increased group size.g
-        remainder = number_of_students % group_size
-        if remainder:
-            if uneven_size == '+':
-                # add 1 to group size so most groups can have a phantom
-                group_size += 1
-        else:
-            uneven_size = '='
-
-        if (n_groups * group_size) < number_of_students:
-            n_groups += 1
-    return {'group_size': group_size,
-            'uneven_size': uneven_size,
-            'n_groups': n_groups}
+        return self.sizer.group_size(number_of_students)
 
 class Course(object):
     def __init__(self, students, sizer):
@@ -174,7 +135,7 @@ def remove_none(s):
 class SubCourse(Course):
     def __init__(self, students, all_students, sizer):
         self.all_students = all_students
-        super(SubCourse, self).__init__(students, sizer)
+        super(SubCourse, self).__init__(students, SplitSizer(sizer, len(all_students)))
 
     def attr_values(self, attr):
         return remove_none(set(s[attr] for s in self.all_students))
