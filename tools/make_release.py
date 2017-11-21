@@ -17,6 +17,7 @@ def rm(f):
 rm('.git')
 rm('.gitignore')
 rm('tests')
+rm('tools')
 
 subprocess.call(['zip', '-r', '{}.zip'.format(rname), rname])
 rmtree(rname)
