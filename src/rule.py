@@ -501,7 +501,7 @@ def apply_rule(rule, groups, students, tries, mixing, try_number=0):
             # Do a few random swaps (not allowing new rule breaks),
             # just to mix things up a bit and increase the chances of
             # finding new solutions
-            for i in range(mixing):
+            for i in range(int(mixing)):
                 find_target_and_swap(random.choice(students), groups)
             return apply_rule(rule, groups, students, tries, mixing, try_number+1)
         else:

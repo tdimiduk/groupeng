@@ -120,7 +120,7 @@ class Course(object):
             return Student(data, identifier=identifier, headers =
                            self.students[0].headers)
 
-        self.students += [make_phantom() for i in range(phantoms_needed)]
+        self.students += [make_phantom() for i in range(int(phantoms_needed))]
 
     def attr_values(self, attr):
         return remove_none(set(s[attr] for s in self.students))

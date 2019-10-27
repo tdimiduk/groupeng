@@ -159,7 +159,7 @@ def make_initial_groups(course, balance_rules, group_number_offset=0):
 
     # randomly assort students into groups
     mtiles = [course.students[course.n_groups*i:(course.n_groups*(i+1))]
-              for i in range(course.group_size)]
+              for i in range(int(course.group_size))]
 
     for mtile in mtiles:
         random.shuffle(mtile)
