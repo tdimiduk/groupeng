@@ -77,7 +77,7 @@ def run(input_deck):
     sizer = sizer_from_dek(dek)
     log.debug(sizer)
 
-    if dek_rules[0]['name'] == 'aggregate':
+    if len(dek_rules) > 0 and dek_rules[0]['name'] == 'aggregate':
         attribute = dek_rules[0]['attribute']
         # Turn back into a list to make sure ordering is preserved when we use
         # this in multiple places
