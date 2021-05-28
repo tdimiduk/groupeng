@@ -38,16 +38,12 @@ rules will generate different groups.
 Download
 --------
 
-[GroupEng v1.1.1](https://groupeng.org/files/groupeng_1.1.1.zip)
+[GroupEng v1.3](https://groupeng.org/files/groupeng-1.3.zip)
 
-GroupEng requires only [Python](http://www.python.org/). If you are
-using a Mac, you already have python, but if it fails try
-[this](http://python.org/ftp/python/2.7.2/python-2.7.2-macosx10.6.dmg)
-version.
+GroupEng requires only [Python](https://www.python.org/downloads/). If you are
+using a Mac, you already have python. 
 
--   Download and install python if necessary (you probably want
-    [this](http://www.python.org/ftp/python/2.7.2/python-2.7.2.msi)
-    version), then download and unpack the GroupEng archive.
+-   [Download](https://www.python.org/downloads/) and install python if necessary, then download and unpack the GroupEng archive.
 -   Write a group description file telling GroupEng how to make groups
     for your class, see the sample files in the archive for examples.
 -   Run GroupEng either by double-clicking the GroupEng.py file in the
@@ -59,9 +55,7 @@ We also have much more detailed
 [instructions](https://groupeng.org/files/GroupEng_Instructions.pdf) if
 you want them.
 
-GroupEng is still fairly experimental software. I hope it is useful to
-you, but it is still a little rough around the edges. Feel free to
-[contact me](mailto:tom@dimiduk.net) if you have any problems using
+Feel free to [contact me](mailto:tom@dimiduk.net) if you have any problems using
 GroupEng
 
 Documentation and Publications
