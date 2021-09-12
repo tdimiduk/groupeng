@@ -249,14 +249,14 @@ class Balance(Rule):
     def __str__(self):
         return "<Balance : {0} : tol {1}>".format(self.mean, self.tol)
     def _check(self, students):
-        try: 
+        try:
             return abs(utility.mean(students, self.get_strength) - self.mean) < self.tol
         # If somehow you don't have a strength for any of the students,
         # consider the group to be failing the rule
         except EmptyMean:
             return False
     def permissable_change(self, old, new):
-        try: 
+        try:
             b = (abs(utility.mean(old, self.get_strength) - self.mean) >
                  abs(utility.mean(new, self.get_strength) - self.mean))
         except EmptyMean:
@@ -503,7 +503,7 @@ def apply_rule(rule, groups, students, tries, mixing, try_number=0):
             # finding new solutions
             for i in range(mixing):
                 find_target_and_swap(random.choice(students), groups)
-            return apply_rule(rule, groups, students, try_number+1, tries, mixing)
+            return apply_rule(rule, groups, students, tries, mixing, try_number+1)
         else:
             return False
     else:
