@@ -58,6 +58,25 @@ you want them.
 Feel free to [contact me](mailto:tom@dimiduk.net) if you have any problems using
 GroupEng
 
+Install Package Using Pip
+-------------------------
+You can directly install `GroupEng` with a simple pip install.
+
+```bash
+!pip install git+https://github.com/tdimiduk/groupeng.git
+```
+
+After installation, you can run `GroupEng` via the following commands in python.
+
+```python
+import GroupEng
+
+# Run the sample specification
+# make sure you have all the required files in the same directory
+GroupEng.run("sample_group_specification.groupeng")
+```
+
+
 Documentation and Publications
 ------------------------------
 
