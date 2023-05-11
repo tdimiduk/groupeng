@@ -53,10 +53,16 @@ def run(input_deck):
     ------
     Output files determined by Input deck
     """
+    cwd = os.getcwd()
     dek = input_parser.read_input(input_deck)
     log.debug('read input deck')
-
-    students = load_classlist(dek['classlist'], dek.get('student_identifier'))
+    try:
+        students = load_classlist(dek['classlist'], dek.get('student_identifier'))
+    except FileNotFoundError:
+        # relative file structure
+        head, tail = os.path.split(input_deck)
+        os.chdir(head)
+        students = load_classlist(dek['classlist'], dek.get('student_identifier'))
     log.debug('read class list')
     identifier = students[0].identifier
     dek_rules = dek['rules']
@@ -95,6 +101,8 @@ def run(input_deck):
         log.debug(sizer.describe(len(students)))
 
     run_name = os.path.splitext(input_deck)[0]
+    # get rid of relative path
+    run_name = os.path.split(run_name)[1]
 
     outdir = 'groups_{0}_{1}'.format(run_name,
                                      time.strftime('%Y-%m-%d_%H-%M-%S'))
@@ -102,6 +110,8 @@ def run(input_deck):
     os.mkdir(outdir)
     log.debug('Made output directory')
     os.chdir(outdir)
+    # return the full output directory.
+    full_outdir = os.getcwd()
 
     def outfile(o):
         return open('{0}_{1}'.format(run_name,o),'w')
@@ -160,9 +170,10 @@ def run(input_deck):
     student_augmented_output(students, rules, outfile('details.csv'))
     log.debug("wrote output")
 
-    os.chdir('..')
+    # change back to current working directory
+    os.chdir(cwd)
 
-    return suceeded, outdir
+    return suceeded, full_outdir
 
 def statistics(rules, groups, students, balance_rules, input_deck_name, classlist, outf):
     def failures(r):
