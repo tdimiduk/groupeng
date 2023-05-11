@@ -63,7 +63,7 @@ Install Package Using Pip
 You can directly install `GroupEng` with a simple pip install.
 
 ```bash
-!pip install git+https://github.com/tdimiduk/groupeng.git
+pip install git+https://github.com/tdimiduk/groupeng.git
 ```
 
 After installation, you can run `GroupEng` via the following commands in python.
