@@ -21,7 +21,7 @@ from .errors import GroupEngFileError
 
 def read_input(infile):
     if not hasattr(infile, 'readlines'):
-        infile = open(infile, 'U')
+        infile = open(infile)
 
     lines = infile.readlines()
     lines = [l.strip() for l in lines if l.strip() != '' and l.strip()[0] != '#']

@@ -87,7 +87,7 @@ def attribute_differs(attribute, value):
 
 
 def load_classlist(filename, identifier):
-    inf = csv.reader(open(filename, 'U'))
+    inf = csv.reader(open(filename))
 
     # csv api changed in python3, be compatible with both
     try:
