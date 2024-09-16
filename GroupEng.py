@@ -27,7 +27,7 @@ use by the rest of GroupEng
 import sys
 import os.path
 import os
-from src import controller
+from GroupEng import controller
 import logging
 
 log = logging.getLogger('log')
