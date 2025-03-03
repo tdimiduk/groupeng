@@ -1,0 +1,91 @@
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title> GroupEng </title>
+  <link href="GroupEng_files/main.css" rel="stylesheet" type="text/css" crossorigin="anonymous" media="speech and (width &gt; 0px)"><link rel="stylesheet" type="text/css" href="GroupEng_files/main_002.css" media="speech and (width &gt; 0px)">
+</head>
+<body>
+  <h1> GroupEng </h1>
+
+  <hr>
+
+  <p>GroupEng is an open source (AGPLv3) program that makes it easy for 
+ instructors to assign students to groups for projects or groupwork, 
+even with  large classes.  </p>
+
+ <p> GroupEng was written specifically to help instructors follow 
+education research guidelines for improving student, and especially 
+minority, performance in group project based classwork.  It allows 
+instructors to think at an abstract level about what properties they 
+want student groups to have; GroupEng handles the details of optimizing 
+the groups to meet those criteria.  </p>
+
+<p> GroupEng operates on class data from an excel spreadsheet (exported 
+to a .csv text file) and forms groups of students based on grouping 
+rules supplied by the instructor.  These rules are defined using four 
+grouping operators:
+  </p><ul>
+	<li> <b> Distribute</b>: Spread students with some attribute (major, a 
+needed skill) across all groups so that each group has about the same 
+number of them </li>
+	<li> <b> Aggregate</b>: Group students with some attribute (project choice, section number) together in the same groups</li>
+	<li> <b> Cluster</b>: Ensure that students with some attribute (women, 
+minorities) are not isolated in a group (there will be at least 2 of 
+them in a group)</li>
+	<li> <b> Balance</b>: Ensure equal strength of groups based on some numeric score (GPA, pretest).  </li>
+  </ul>
+
+You specify class data, desired group size, and an ordered list of 
+grouping rules (earlier rules are given higher priority) in a simple 
+text file, and GroupEng does the rest, outputting a grouping of the 
+students, as well as statistics of how well it was able to meet your 
+rules.  GroupEng has a random element, so different runs with the same 
+rules will generate different groups.  
+  
+  <h2>Download </h2>
+     
+  <a href="https://groupeng.org/files/groupeng-1.3.zip"> GroupEng v1.3 </a>
+
+  <p> GroupEng requires only <a href="http://www.python.org/">Python</a>.  If you are using a Mac, you already have python, but if it fails try <a href="https://www.python.org/ftp/python/3.6.0/python-3.6.0-macosx10.6.pkg">this</a> version.  </p> 
+
+  <ul>
+      <li> Download and install python if necessary (you probably want <a href="https://www.python.org/ftp/python/3.6.0/python-3.6.0-amd64.exe">this</a> version), then download and unpack the GroupEng archive.</li>
+    <li> Write a group description file telling GroupEng how to make 
+groups for your class, see the sample files in the archive for examples.</li>
+    <li> Run GroupEng either by double-clicking the GroupEng.py file in 
+the archive and selecting your input file in the file chooser that 
+appears, or at a command line specifying the location of your input file
+ as an argument </li>
+  </ul>
+
+We also have much more detailed <a href="https://groupeng.org/files/GroupEng_Instructions.pdf">instructions</a> if you want them.  
+  
+  <p> GroupEng is still fairly experimental software.  I hope it is useful to
+  you, but it is still a little rough around the edges.  Feel free
+  to <a href="mailto:tom@dimiduk.net"> contact me </a> if you have any problems
+  using GroupEng </p>
+
+  <h2> Documentation and Publications </h2>
+
+  <p> Kathryn's <a href="https://groupeng.org/files/ASSE_Lawrence_GroupEng_Workshop.pdf">talk</a> on GroupEng at the ASEE Lawrence Section in March 2012.  
+
+      </p><p> We presented <a href="https://groupeng.org/files/GroupEng_Talk_WEPAN.pdf">talk</a> and <a href="https://groupeng.org/files/GroupEng_Paper_WEPAN.pdf">paper</a> on GroupEng at the 2011 WEPAN conference in Seattle.  </p>
+
+      <p>These documents give a good introduction and overview of 
+GroupEng and how  you should think about using it.  We have simplified 
+the input files since those documents were written, so follow the 
+example that comes with the program instead of the directions in the 
+paper.   </p>
+
+  <h2> Development / Bugs </h2>
+
+  GroupEng is on <a href="https://github.com/tdimiduk/groupeng"> GitHub </a>.
+  You can get the latest development code there. If you know how to use 
+github please file issues there if you have problems or want to request 
+features, or you can <a href="mailto:tom@dimiduk.net">email me</a>.
+
+<hr>
+  
+  GroupEng was written by <a href="http://tom.dimiduk.net/">Thomas Dimiduk</a> while a grad student at Harvard (PhD 2016) with Kathryn Dimiduk of <a href="http://www.engineering.cornell.edu/academics/teaching/teaching_excellence/">Cornell Engineering's James McCormick Family Teaching Excellence Institute</a>.
+  
+
+</body></html>
